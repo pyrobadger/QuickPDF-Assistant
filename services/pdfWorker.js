@@ -126,10 +126,57 @@ class PDFWorker {
     }
 
     /**
+     * Convert Multiple Images to PDF
+     */
+    async convertImagesToPdf(inputPaths, outputPath) {
+        if (!Array.isArray(inputPaths) || inputPaths.length === 0) {
+            throw new Error('No input images provided.');
+        }
+
+        const pdfDoc = await PDFDocument.create();
+
+        for (const inputPath of inputPaths) {
+            const imageBytes = await fs.readFile(inputPath);
+            const ext = path.extname(inputPath).toLowerCase();
+            let image;
+
+            if (ext === '.jpg' || ext === '.jpeg') {
+                image = await pdfDoc.embedJpg(imageBytes);
+            } else if (ext === '.png') {
+                image = await pdfDoc.embedPng(imageBytes);
+            } else {
+                console.warn(`Skipping unsupported image type: ${inputPath}`);
+                continue; // Skip unsupported
+            }
+
+            const page = pdfDoc.addPage([image.width, image.height]);
+            page.drawImage(image, {
+                x: 0,
+                y: 0,
+                width: image.width,
+                height: image.height,
+            });
+        }
+
+        const pdfBytes = await pdfDoc.save();
+        await fs.writeFile(outputPath, pdfBytes);
+        return outputPath;
+    }
+
+    /**
      * Convert PDF to Image (first page as representation or all pages)
      * For MVP, we will extract the first page as a JPG using Ghostscript
      */
     async convertPdfToImage(inputPath, outputPatternDir) {
+        // First check page count
+        const pdfBytes = await fs.readFile(inputPath);
+        const pdfDoc = await PDFDocument.load(pdfBytes);
+        const pageCount = pdfDoc.getPageCount();
+
+        if (pageCount > 10) {
+            throw new Error(`MAX_PAGES_EXCEEDED:${pageCount}`);
+        }
+
         // Output format: outputDir/page-%d.jpg
         const outputPath = path.join(outputPatternDir, 'page-%d.jpg');
         const command = `${gsCommand} -dNOPAUSE -dQUIET -dBATCH -sDEVICE=jpeg -r150 -sOutputFile="${outputPath}" "${inputPath}"`;

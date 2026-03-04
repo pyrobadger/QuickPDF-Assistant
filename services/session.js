@@ -3,6 +3,8 @@ const NodeCache = require('node-cache');
 const sessionCache = new NodeCache({ stdTTL: 900, checkperiod: 120 });
 // Daily limits cache (24 hours)
 const dailyLimitCache = new NodeCache({ stdTTL: 86400, checkperiod: 3600 });
+// Long-lived cache for tracking seen users (30 days = 2592000 seconds)
+const seenUserCache = new NodeCache({ stdTTL: 2592000, checkperiod: 86400 });
 
 class SessionService {
 
@@ -37,6 +39,15 @@ class SessionService {
 
     getDailyUsage(phoneNumber) {
         return dailyLimitCache.get(phoneNumber) || 0;
+    }
+
+    isFirstTimeUser(phoneNumber) {
+        const hasSeen = seenUserCache.get(phoneNumber);
+        if (!hasSeen) {
+            seenUserCache.set(phoneNumber, true);
+            return true;
+        }
+        return false;
     }
 }
 

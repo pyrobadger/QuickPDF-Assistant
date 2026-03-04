@@ -183,6 +183,26 @@ class WhatsAppService {
             console.error('Failed to send document:', error.response ? error.response.data : error.message);
         }
     }
+
+    async sendImageId(to, mediaId) {
+        try {
+            await axios({
+                method: 'POST',
+                url: `${BASE_URL}${process.env.PHONE_NUMBER_ID}/messages`,
+                data: {
+                    messaging_product: 'whatsapp',
+                    to: to,
+                    type: 'image',
+                    image: {
+                        id: mediaId
+                    }
+                },
+                headers: getHeaders()
+            });
+        } catch (error) {
+            console.error('Failed to send image:', error.response ? error.response.data : error.message);
+        }
+    }
 }
 
 module.exports = new WhatsAppService();
