@@ -1,0 +1,2770 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuickPDF Assistant | PDF Powerhouse on WhatsApp</title>
+    <meta name="description"
+        content="Merge, split, compress, and convert PDFs directly within WhatsApp. No apps or browser extensions needed.">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <style>
+        /* ===== RESET & BASE ===== */
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --color-bg: #FAFBFC;
+            --color-surface: #ffffff;
+            --color-text: #1a1a2e;
+            --color-text-secondary: #64748b;
+            --color-text-muted: #94a3b8;
+            --color-border: #e8ecf1;
+            --color-accent: #0f172a;
+            --color-coral: #F06543;
+            --color-coral-dark: #E84F2A;
+            --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --radius-xl: 24px;
+            --radius-2xl: 32px;
+            --radius-full: 9999px;
+            --shadow-soft: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.06);
+            --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.08);
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background-color: var(--color-bg);
+            color: var(--color-text);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            overflow-x: hidden;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        img {
+            display: block;
+            max-width: 100%;
+        }
+
+        /* ===== ANNOUNCEMENT BAR ===== */
+        .announcement-bar {
+            background: var(--color-accent);
+            color: #fff;
+            text-align: center;
+            padding: 10px 24px;
+            font-size: 13px;
+            font-weight: 500;
+            letter-spacing: 0.01em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .announcement-bar .dot {
+            width: 6px;
+            height: 6px;
+            background: var(--color-coral);
+            border-radius: 50%;
+            animation: pulse-dot 2s infinite;
+        }
+
+        .announcement-bar a {
+            color: #fff;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: opacity 0.2s;
+        }
+
+        .announcement-bar a:hover {
+            opacity: 0.85;
+        }
+
+        @keyframes pulse-dot {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.4;
+            }
+        }
+
+        /* ===== NAVIGATION ===== */
+        .nav-wrapper {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(250, 251, 252, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--color-border);
+            transition: box-shadow 0.3s;
+        }
+
+        .nav-wrapper.scrolled {
+            box-shadow: 0 1px 8px rgba(0, 0, 0, 0.06);
+        }
+
+        .nav {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 32px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .nav-logo {
+            font-size: 20px;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            color: var(--color-text);
+        }
+
+        .nav-logo span {
+            font-weight: 400;
+            color: var(--color-text-muted);
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 32px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--color-text-secondary);
+            transition: color 0.2s;
+        }
+
+        .nav-links a:hover {
+            color: var(--color-text);
+        }
+
+        .nav-cta {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 24px;
+            background: var(--color-accent);
+            color: #fff;
+            font-size: 14px;
+            font-weight: 600;
+            border-radius: var(--radius-full);
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .nav-cta:hover {
+            background: #000;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        .nav-mobile-btn {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: var(--color-text);
+            cursor: pointer;
+            padding: 8px;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* ===== MOBILE MENU OVERLAY ===== */
+        .mobile-menu {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 200;
+            pointer-events: none;
+        }
+
+        .mobile-menu.open {
+            pointer-events: all;
+        }
+
+        .mobile-menu-backdrop {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.4);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .mobile-menu.open .mobile-menu-backdrop {
+            opacity: 1;
+        }
+
+        .mobile-menu-panel {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: var(--color-surface);
+            padding: 24px;
+            transform: translateY(-100%);
+            transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+            border-bottom-left-radius: var(--radius-xl);
+            border-bottom-right-radius: var(--radius-xl);
+            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.15);
+        }
+
+        .mobile-menu.open .mobile-menu-panel {
+            transform: translateY(0);
+        }
+
+        .mobile-menu-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+        }
+
+        .mobile-menu-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: var(--color-text);
+            cursor: pointer;
+            padding: 8px;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .mobile-menu-links {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            margin-bottom: 24px;
+        }
+
+        .mobile-menu-links a {
+            display: block;
+            padding: 14px 16px;
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--color-text);
+            border-radius: var(--radius-md);
+            transition: background 0.2s;
+        }
+
+        .mobile-menu-links a:hover,
+        .mobile-menu-links a:active {
+            background: var(--color-bg);
+        }
+
+        .mobile-menu-cta {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 14px 28px;
+            background: var(--color-accent);
+            color: #fff;
+            font-size: 15px;
+            font-weight: 600;
+            border-radius: var(--radius-full);
+            width: 100%;
+            text-align: center;
+        }
+
+        /* ===== HERO ===== */
+        .hero {
+            position: relative;
+            padding: 100px 32px 80px;
+            text-align: center;
+            overflow: hidden;
+        }
+
+        .hero-gradient {
+            position: absolute;
+            top: -200px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 140%;
+            height: 900px;
+            background: radial-gradient(ellipse 80% 60% at 50% 20%,
+                    rgba(240, 101, 67, 0.12) 0%,
+                    rgba(255, 154, 139, 0.1) 25%,
+                    rgba(200, 160, 240, 0.08) 50%,
+                    rgba(250, 251, 252, 0) 80%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .hero h1 {
+            font-size: clamp(40px, 6vw, 72px);
+            font-weight: 500;
+            letter-spacing: -0.035em;
+            line-height: 1.08;
+            margin-bottom: 24px;
+            color: var(--color-text);
+        }
+
+        .hero h1 .muted {
+            color: var(--color-text-muted);
+        }
+
+        .hero-subtitle {
+            font-size: clamp(16px, 2vw, 20px);
+            color: var(--color-text-secondary);
+            max-width: 560px;
+            margin: 0 auto 40px;
+            line-height: 1.7;
+
+        }
+
+        .hero-actions {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 14px 32px;
+            background: var(--color-accent);
+            color: #fff;
+            font-size: 15px;
+            font-weight: 600;
+            border-radius: var(--radius-full);
+            border: none;
+            cursor: pointer;
+            transition: all 0.25s;
+        }
+
+        .btn-primary:hover {
+            background: #000;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+        }
+
+        .btn-outline {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 14px 32px;
+            background: var(--color-surface);
+            color: var(--color-text);
+            font-size: 15px;
+            font-weight: 600;
+            border-radius: var(--radius-full);
+            border: 1px solid var(--color-border);
+            cursor: pointer;
+            transition: all 0.25s;
+        }
+
+        .btn-outline:hover {
+            background: #f1f5f9;
+            border-color: #cbd5e1;
+        }
+
+        /* ===== HERO VIDEO SHOWCASE ===== */
+        .hero-showcase {
+            position: relative;
+            z-index: 1;
+            max-width: 980px;
+            margin: 56px auto 0;
+            padding: 0 16px;
+        }
+
+        .video-wrapper {
+            position: relative;
+            border-radius: 24px;
+            overflow: hidden;
+            border: 1px solid var(--color-border);
+            box-shadow: 0 24px 80px rgba(0, 0, 0, 0.10), 0 4px 16px rgba(0, 0, 0, 0.06);
+            background: #0f172a;
+            aspect-ratio: 16 / 9;
+            cursor: pointer;
+        }
+
+        .video-wrapper video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            border-radius: 24px;
+        }
+
+
+        /* ===== TRUST BAR ===== */
+        .trust-bar {
+            position: relative;
+            z-index: 1;
+            margin: 36px auto 0;
+            max-width: 720px;
+
+
+        }
+
+        .trust-bar-label {
+            text-align: center;
+            font-size: 13px;
+            color: var(--color-text-muted);
+            font-weight: 500;
+            margin-bottom: 16px;
+            letter-spacing: 0.01em;
+        }
+
+        .trust-bar-label strong {
+            color: var(--color-text-secondary);
+            font-weight: 600;
+        }
+
+        .trust-ticker-wrapper {
+            position: relative;
+            overflow: hidden;
+            width: 100%;
+            mask-image: linear-gradient(to right, transparent 0%, black 12%, black 88%, transparent 100%);
+            -webkit-mask-image: linear-gradient(to right, transparent 0%, black 12%, black 88%, transparent 100%);
+        }
+
+        .trust-ticker {
+            display: flex;
+            gap: 40px;
+            width: max-content;
+            animation: trust-scroll 22s linear infinite;
+        }
+
+        .trust-ticker:hover {
+            animation-play-state: paused;
+        }
+
+        .trust-tag {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--color-text-secondary);
+            white-space: nowrap;
+            flex-shrink: 0;
+            letter-spacing: -0.01em;
+            opacity: 0.6;
+        }
+
+        .trust-dot {
+            color: var(--color-text-muted);
+            opacity: 0.35;
+            font-size: 18px;
+            line-height: 1;
+            flex-shrink: 0;
+        }
+
+        @keyframes trust-scroll {
+            from {
+                transform: translateX(0);
+            }
+
+            to {
+                transform: translateX(-50%);
+            }
+        }
+
+        /* ===== FEATURES SECTION (TABBED) ===== */
+        .features-section {
+            padding: 120px 32px;
+            background: var(--color-bg);
+        }
+
+        .features-header {
+            text-align: center;
+            max-width: 640px;
+            margin: 0 auto 64px;
+        }
+
+        .features-header h2 {
+            font-size: clamp(32px, 4vw, 48px);
+            font-weight: 700;
+            letter-spacing: -0.03em;
+            line-height: 1.15;
+            margin-bottom: 16px;
+        }
+
+        .features-header h2 .muted {
+            color: var(--color-text-muted);
+        }
+
+        .features-header p {
+            font-size: 17px;
+            color: var(--color-text-secondary);
+            line-height: 1.7;
+        }
+
+        /* Tabs */
+        .tabs-wrapper {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .tabs-nav {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            margin-bottom: 48px;
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-full);
+            padding: 4px;
+            width: fit-content;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .tab-btn {
+            padding: 10px 24px;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--color-text-secondary);
+            background: transparent;
+            border: none;
+            border-radius: var(--radius-full);
+            cursor: pointer;
+            transition: all 0.25s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tab-btn:hover {
+            color: var(--color-text);
+        }
+
+        .tab-btn.active {
+            background: var(--color-bg);
+            color: var(--color-text);
+            font-weight: 600;
+            box-shadow: var(--shadow-soft);
+        }
+
+        .tab-btn i {
+            font-size: 16px;
+        }
+
+        /* Tab Content */
+        .tab-panel {
+            display: none;
+            animation: fadeInTab 0.4s ease;
+        }
+
+        .tab-panel.active {
+            display: block;
+        }
+
+        @keyframes fadeInTab {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .feature-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 48px;
+            align-items: center;
+        }
+
+        .feature-text h3 {
+            font-size: clamp(26px, 3vw, 36px);
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            line-height: 1.2;
+            margin-bottom: 16px;
+        }
+
+        .feature-text h3 .muted {
+            color: var(--color-text-muted);
+        }
+
+        .feature-text p {
+            font-size: 16px;
+            color: var(--color-text-secondary);
+            line-height: 1.7;
+            margin-bottom: 24px;
+        }
+
+        .feature-text .cta-link {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--color-text);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: gap 0.2s;
+        }
+
+        .feature-text .cta-link:hover {
+            gap: 10px;
+        }
+
+        .feature-visual {
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-xl);
+            padding: 40px;
+            min-height: 340px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .feature-visual-inner {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+            text-align: center;
+        }
+
+        .feature-icon-large {
+            width: 72px;
+            height: 72px;
+            border-radius: var(--radius-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+        }
+
+        .feature-icon-large.orange {
+            background: #fff5f3;
+            color: var(--color-coral);
+        }
+
+        .feature-icon-large.blue {
+            background: #eff6ff;
+            color: #3b82f6;
+        }
+
+        .feature-icon-large.green {
+            background: #f0fdf4;
+            color: #16a34a;
+        }
+
+        .feature-icon-large.purple {
+            background: #faf5ff;
+            color: #a855f7;
+        }
+
+        .feature-visual-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--color-text);
+        }
+
+        .feature-visual-sublabel {
+            font-size: 13px;
+            color: var(--color-text-muted);
+        }
+
+        /* Stats Row */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1px;
+            background: var(--color-border);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-xl);
+            overflow: hidden;
+            margin-top: 48px;
+        }
+
+        .stat-item {
+            background: var(--color-surface);
+            padding: 32px 24px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 36px;
+            font-weight: 800;
+            color: var(--color-text);
+            letter-spacing: -0.03em;
+            line-height: 1;
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: var(--color-text-muted);
+            line-height: 1.4;
+        }
+
+        /* ===== HOW IT WORKS ===== */
+        .how-section {
+            padding: 120px 32px;
+            background: var(--color-surface);
+            border-top: 1px solid var(--color-border);
+            border-bottom: 1px solid var(--color-border);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .how-section::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 800px;
+            height: 800px;
+            background: radial-gradient(circle, rgba(240, 101, 67, 0.03) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .how-header {
+            text-align: center;
+            max-width: 600px;
+            margin: 0 auto 72px;
+            position: relative;
+        }
+
+        .how-header h2 {
+            font-size: clamp(32px, 4vw, 48px);
+            font-weight: 700;
+            letter-spacing: -0.03em;
+            line-height: 1.15;
+            margin-bottom: 16px;
+        }
+
+        .how-header p {
+            font-size: 17px;
+            color: var(--color-text-secondary);
+        }
+
+        .steps-grid {
+            max-width: 1060px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr auto 1fr auto 1fr;
+            gap: 0;
+            align-items: center;
+            position: relative;
+        }
+
+        .step-card {
+            background: var(--color-bg);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-xl);
+            padding: 48px 32px 40px;
+            text-align: center;
+            transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+        }
+
+        .step-card:hover {
+            border-color: #cbd5e1;
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-8px);
+        }
+
+        .step-badge {
+            position: absolute;
+            top: -14px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            padding: 4px 14px;
+            border-radius: var(--radius-full);
+            white-space: nowrap;
+        }
+
+        .step-badge.coral {
+            background: #fff5f3;
+            color: var(--color-coral);
+            border: 1px solid rgba(240, 101, 67, 0.15);
+        }
+
+        .step-badge.blue {
+            background: #eff6ff;
+            color: #3b82f6;
+            border: 1px solid rgba(59, 130, 246, 0.15);
+        }
+
+        .step-badge.green {
+            background: #f0fdf4;
+            color: #16a34a;
+            border: 1px solid rgba(22, 163, 74, 0.15);
+        }
+
+        .step-icon-wrap {
+            width: 80px;
+            height: 80px;
+            border-radius: var(--radius-xl);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+            font-size: 36px;
+            position: relative;
+        }
+
+        .step-icon-wrap.coral {
+            background: linear-gradient(135deg, #fff5f3 0%, #ffe8e3 100%);
+            color: var(--color-coral);
+        }
+
+        .step-icon-wrap.blue {
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+            color: #3b82f6;
+        }
+
+        .step-icon-wrap.green {
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+            color: #16a34a;
+        }
+
+        .step-icon-wrap::after {
+            content: '';
+            position: absolute;
+            inset: -4px;
+            border-radius: inherit;
+            border: 2px dashed transparent;
+            transition: border-color 0.3s;
+        }
+
+        .step-card:hover .step-icon-wrap::after {
+            border-color: rgba(0, 0, 0, 0.06);
+        }
+
+        .step-card h3 {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: var(--color-text);
+        }
+
+        .step-card p {
+            font-size: 14px;
+            color: var(--color-text-secondary);
+            line-height: 1.65;
+            max-width: 240px;
+            margin: 0 auto;
+        }
+
+        .step-connector {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 12px;
+            color: var(--color-text-muted);
+            opacity: 0.35;
+            font-size: 24px;
+        }
+
+        .step-connector svg {
+            width: 48px;
+            height: 24px;
+        }
+
+        /* steps-grid mobile handled in main responsive block below */
+
+        /* ===== WHAT YOU CAN DO SECTION ===== */
+        .capabilities-section {
+            padding: 120px 32px;
+            background: var(--color-bg);
+        }
+
+        .capabilities-header {
+            text-align: center;
+            max-width: 600px;
+            margin: 0 auto 64px;
+        }
+
+        .capabilities-header h2 {
+            font-size: clamp(32px, 4vw, 48px);
+            font-weight: 700;
+            letter-spacing: -0.03em;
+            line-height: 1.15;
+            margin-bottom: 16px;
+        }
+
+        .capabilities-header h2 .muted {
+            color: var(--color-text-muted);
+        }
+
+        .capabilities-header p {
+            font-size: 17px;
+            color: var(--color-text-secondary);
+        }
+
+        .capabilities-list {
+            max-width: 800px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .capability-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 20px 28px;
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-lg);
+            transition: all 0.25s;
+            cursor: pointer;
+        }
+
+        .capability-item:hover {
+            border-color: #cbd5e1;
+            box-shadow: var(--shadow-soft);
+            transform: translateX(4px);
+        }
+
+        .capability-item i {
+            font-size: 20px;
+            color: var(--color-coral);
+            flex-shrink: 0;
+        }
+
+        .capability-item .cap-text {
+            flex: 1;
+        }
+
+        .capability-item .cap-text strong {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--color-text);
+        }
+
+        .capability-item .cap-text span {
+            font-size: 13px;
+            color: var(--color-text-muted);
+            margin-left: 8px;
+        }
+
+        .capability-item .cap-arrow {
+            font-size: 16px;
+            color: var(--color-text-muted);
+            transition: transform 0.2s;
+        }
+
+        .capability-item:hover .cap-arrow {
+            transform: translateX(4px);
+            color: var(--color-text);
+        }
+
+        /* ===== BOTTOM CTA ===== */
+        .cta-section {
+            padding: 120px 32px;
+            background: var(--color-bg);
+        }
+
+        .cta-card {
+            max-width: 900px;
+            margin: 0 auto;
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-2xl);
+            padding: 80px 48px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cta-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle at 50% 0%, rgba(240, 101, 67, 0.04) 0%, transparent 60%);
+            pointer-events: none;
+        }
+
+        .cta-card h2 {
+            font-size: clamp(32px, 4vw, 48px);
+            font-weight: 700;
+            letter-spacing: -0.03em;
+            margin-bottom: 16px;
+            position: relative;
+        }
+
+        .cta-card p {
+            font-size: 17px;
+            color: var(--color-text-secondary);
+            max-width: 460px;
+            margin: 0 auto 40px;
+            line-height: 1.7;
+            position: relative;
+        }
+
+        .cta-card .btn-primary {
+            position: relative;
+            font-size: 16px;
+            padding: 16px 40px;
+        }
+
+        /* ===== FLOATING CTA BAR ===== */
+        .floating-cta {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--color-accent);
+            color: #fff;
+            padding: 12px 12px 12px 24px;
+            border-radius: var(--radius-full);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.24);
+            z-index: 90;
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .floating-cta.visible {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .floating-cta-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 20px;
+            background: var(--color-coral);
+            color: #fff;
+            border-radius: var(--radius-full);
+            font-size: 13px;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+
+        .floating-cta-btn:hover {
+            background: var(--color-coral-dark);
+        }
+
+        .floating-cta-link {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 13px;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .floating-cta-link:hover {
+            color: #fff;
+        }
+
+        /* ===== FOOTER ===== */
+        .footer {
+            background: var(--color-surface);
+            border-top: 1px solid var(--color-border);
+            padding: 48px 32px;
+        }
+
+        .footer-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 24px;
+        }
+
+        .footer-logo {
+            font-size: 18px;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+        }
+
+        .footer-logo span {
+            font-weight: 400;
+            color: var(--color-text-muted);
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 24px;
+        }
+
+        .footer-links a {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--color-text-secondary);
+            transition: color 0.2s;
+        }
+
+        .footer-links a:hover {
+            color: var(--color-text);
+        }
+
+        .footer-copy {
+            font-size: 13px;
+            color: var(--color-text-muted);
+        }
+
+        /* ===== SCROLL ANIMATIONS ===== */
+        .reveal {
+            opacity: 0;
+            transform: translateY(32px);
+            transition: opacity 0.7s ease, transform 0.7s ease;
+        }
+
+        .reveal.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* ===== RESPONSIVE — TABLET (≤1024px) ===== */
+        @media (max-width: 1024px) {
+            .nav {
+                padding: 0 24px;
+            }
+
+            .hero {
+                padding: 80px 24px 60px;
+            }
+
+            .features-section,
+            .how-section,
+            .capabilities-section,
+            .pricing-section,
+            .cta-section {
+                padding: 80px 24px;
+            }
+        }
+
+        /* ===== RESPONSIVE — MOBILE (≤768px) ===== */
+        @media (max-width: 768px) {
+
+            /* --- Navigation --- */
+            .nav-links {
+                display: none;
+            }
+
+            .nav-mobile-btn {
+                display: block;
+            }
+
+            .nav-cta {
+                display: none;
+            }
+
+            .mobile-menu {
+                display: block;
+            }
+
+            .nav {
+                padding: 0 16px;
+                height: 56px;
+            }
+
+            .nav-logo {
+                font-size: 18px;
+            }
+
+            /* --- Announcement Bar --- */
+            .announcement-bar {
+                padding: 8px 16px;
+                font-size: 12px;
+                flex-wrap: wrap;
+                gap: 4px;
+            }
+
+            .announcement-bar a {
+                font-size: 12px;
+            }
+
+            /* --- Hero --- */
+            .hero {
+                padding: 48px 20px 32px;
+            }
+
+            .hero h1 {
+                font-size: clamp(28px, 8vw, 44px);
+                margin-bottom: 16px;
+            }
+
+            .hero-subtitle {
+                font-size: 15px;
+                margin-bottom: 28px;
+                line-height: 1.6;
+            }
+
+            .hero-actions {
+                flex-direction: column;
+                gap: 10px;
+                width: 100%;
+            }
+
+            .hero-actions .btn-primary,
+            .hero-actions .btn-outline {
+                width: 100%;
+                justify-content: center;
+                padding: 14px 24px;
+            }
+
+            /* --- Showcase Cards --- */
+            .hero-showcase {
+                margin-top: 40px;
+            }
+
+            .showcase-grid {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+
+            .showcase-card {
+                padding: 24px 20px;
+                display: flex;
+                align-items: center;
+                gap: 16px;
+                text-align: left;
+            }
+
+            .showcase-card:hover {
+                transform: none;
+            }
+
+            .showcase-icon {
+                width: 48px;
+                height: 48px;
+                font-size: 20px;
+                margin: 0;
+                flex-shrink: 0;
+            }
+
+            .showcase-stat {
+                font-size: 24px;
+            }
+
+            .showcase-label {
+                font-size: 12px;
+            }
+
+            /* --- Features Section --- */
+            .features-section {
+                padding: 64px 16px;
+            }
+
+            .features-header {
+                margin-bottom: 40px;
+            }
+
+            .features-header p {
+                font-size: 15px;
+            }
+
+            .tabs-nav {
+                overflow-x: auto;
+                width: 100%;
+                justify-content: flex-start;
+                border-radius: var(--radius-lg);
+                -ms-overflow-style: none;
+                scrollbar-width: none;
+            }
+
+            .tabs-nav::-webkit-scrollbar {
+                display: none;
+            }
+
+            .tab-btn {
+                white-space: nowrap;
+                padding: 10px 16px;
+                font-size: 13px;
+                flex-shrink: 0;
+            }
+
+            .feature-layout {
+                grid-template-columns: 1fr;
+                gap: 24px;
+            }
+
+            .feature-text h3 {
+                font-size: 24px;
+            }
+
+            .feature-text p {
+                font-size: 15px;
+                margin-bottom: 16px;
+            }
+
+            .feature-visual {
+                padding: 28px 20px;
+                min-height: 240px;
+            }
+
+            .feature-icon-large {
+                width: 60px;
+                height: 60px;
+                font-size: 28px;
+            }
+
+            .stats-row {
+                grid-template-columns: 1fr;
+                margin-top: 32px;
+            }
+
+            .stat-item {
+                padding: 20px 16px;
+            }
+
+            .stat-number {
+                font-size: 28px;
+            }
+
+            /* --- How It Works --- */
+            .how-section {
+                padding: 64px 16px;
+            }
+
+            .how-header {
+                margin-bottom: 48px;
+            }
+
+            .how-header p {
+                font-size: 15px;
+            }
+
+            .steps-grid {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+
+            .step-connector {
+                transform: rotate(90deg);
+                padding: 0;
+            }
+
+            .step-connector svg {
+                width: 36px;
+                height: 18px;
+            }
+
+            .step-card {
+                padding: 40px 24px 32px;
+            }
+
+            .step-card:hover {
+                transform: none;
+            }
+
+            .step-icon-wrap {
+                width: 64px;
+                height: 64px;
+                font-size: 28px;
+                margin-bottom: 16px;
+            }
+
+            .step-card h3 {
+                font-size: 18px;
+            }
+
+            /* --- Capabilities --- */
+            .capabilities-section {
+                padding: 64px 16px;
+            }
+
+            .capabilities-header {
+                margin-bottom: 40px;
+            }
+
+            .capabilities-header p {
+                font-size: 15px;
+            }
+
+            .capability-item {
+                padding: 16px 20px;
+            }
+
+            .capability-item:hover {
+                transform: none;
+            }
+
+            .capability-item .cap-text strong {
+                font-size: 14px;
+            }
+
+            .capability-item .cap-text span {
+                display: block;
+                margin-left: 0;
+                margin-top: 2px;
+                font-size: 12px;
+            }
+
+            /* --- Pricing --- */
+            .pricing-section {
+                padding: 64px 16px;
+            }
+
+            .pricing-header p {
+                font-size: 15px;
+            }
+
+            .billing-toggle {
+                margin-bottom: 36px;
+            }
+
+            .pricing-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .pricing-card {
+                padding: 32px 24px;
+            }
+
+            .pricing-amount {
+                font-size: 34px;
+            }
+
+            .pricing-name {
+                font-size: 20px;
+            }
+
+            /* --- CTA Section --- */
+            .cta-section {
+                padding: 64px 16px;
+            }
+
+            .cta-card {
+                padding: 48px 20px;
+                border-radius: var(--radius-xl);
+            }
+
+            .cta-card h2 {
+                font-size: clamp(24px, 6vw, 36px);
+            }
+
+            .cta-card p {
+                font-size: 15px;
+                margin-bottom: 28px;
+            }
+
+            .cta-card .btn-primary {
+                width: 100%;
+                justify-content: center;
+                font-size: 15px;
+                padding: 14px 28px;
+            }
+
+            /* --- Floating CTA --- */
+            .floating-cta {
+                bottom: 16px;
+                left: 16px;
+                right: 16px;
+                transform: translateX(0) translateY(100px);
+                width: auto;
+                font-size: 13px;
+                gap: 10px;
+                padding: 10px 10px 10px 16px;
+                justify-content: space-between;
+            }
+
+            .floating-cta.visible {
+                transform: translateX(0) translateY(0);
+            }
+
+            .floating-cta-link {
+                display: none;
+            }
+
+            .floating-cta-btn {
+                padding: 10px 16px;
+                font-size: 12px;
+            }
+
+            /* --- Footer --- */
+            .footer {
+                padding: 32px 16px;
+            }
+
+            .footer-inner {
+                flex-direction: column;
+                text-align: center;
+                gap: 16px;
+            }
+
+            .footer-links {
+                gap: 16px;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            /* --- Scroll reveal - reduce travel on mobile --- */
+            .reveal {
+                transform: translateY(20px);
+            }
+        }
+
+        /* ===== RESPONSIVE — SMALL MOBILE (≤480px) ===== */
+        @media (max-width: 480px) {
+            .hero {
+                padding: 36px 16px 24px;
+            }
+
+            .hero h1 {
+                font-size: 28px;
+            }
+
+            .hero-subtitle {
+                font-size: 14px;
+            }
+
+            .hero-actions .btn-primary,
+            .hero-actions .btn-outline {
+                font-size: 14px;
+                padding: 12px 20px;
+            }
+
+            .showcase-card {
+                padding: 18px 16px;
+                gap: 12px;
+            }
+
+            .showcase-stat {
+                font-size: 20px;
+            }
+
+            .features-header h2,
+            .how-header h2,
+            .capabilities-header h2,
+            .pricing-header h2 {
+                font-size: 26px;
+            }
+
+            .feature-text h3 {
+                font-size: 20px;
+            }
+
+            .step-card {
+                padding: 32px 16px 24px;
+            }
+
+            .step-icon-wrap {
+                width: 56px;
+                height: 56px;
+                font-size: 24px;
+            }
+
+            .capability-item {
+                padding: 14px 16px;
+                gap: 12px;
+            }
+
+            .capability-item i:first-child {
+                font-size: 18px;
+            }
+
+            .pricing-card {
+                padding: 28px 20px;
+            }
+
+            .cta-card {
+                padding: 36px 16px;
+            }
+
+            .floating-cta {
+                left: 12px;
+                right: 12px;
+                bottom: 12px;
+                padding: 8px 8px 8px 14px;
+            }
+
+            .floating-cta span {
+                font-size: 12px;
+            }
+        }
+
+        /* ===== PRICING SECTION ===== */
+        .pricing-section {
+            padding: 120px 32px;
+            background: var(--color-surface);
+            border-top: 1px solid var(--color-border);
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .pricing-header {
+            text-align: center;
+            max-width: 640px;
+            margin: 0 auto 24px;
+        }
+
+        .pricing-header h2 {
+            font-size: clamp(32px, 4vw, 48px);
+            font-weight: 700;
+            letter-spacing: -0.03em;
+            line-height: 1.15;
+            margin-bottom: 16px;
+        }
+
+        .pricing-header h2 .muted {
+            color: var(--color-text-muted);
+        }
+
+        .pricing-header p {
+            font-size: 17px;
+            color: var(--color-text-secondary);
+            line-height: 1.7;
+        }
+
+        /* Billing Toggle */
+        .billing-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 56px;
+        }
+
+        .billing-toggle span {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--color-text-muted);
+            transition: color 0.2s;
+        }
+
+        .billing-toggle span.active-label {
+            color: var(--color-text);
+            font-weight: 600;
+        }
+
+        .toggle-switch {
+            width: 48px;
+            height: 26px;
+            background: var(--color-border);
+            border-radius: var(--radius-full);
+            position: relative;
+            cursor: pointer;
+            transition: background 0.3s;
+            flex-shrink: 0;
+        }
+
+        .toggle-switch.yearly {
+            background: var(--color-coral);
+        }
+
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 20px;
+            height: 20px;
+            background: #fff;
+            border-radius: 50%;
+            transition: transform 0.3s;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+        }
+
+        .toggle-switch.yearly::after {
+            transform: translateX(22px);
+        }
+
+        .save-badge {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--color-coral);
+            background: #fff5f3;
+            padding: 4px 10px;
+            border-radius: var(--radius-full);
+        }
+
+        /* Pricing Cards */
+        .pricing-grid {
+            max-width: 820px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        .pricing-card {
+            background: var(--color-bg);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-xl);
+            padding: 40px 32px;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .pricing-card:hover {
+            border-color: #cbd5e1;
+            box-shadow: var(--shadow-md);
+        }
+
+        .pricing-card.featured {
+            border-color: var(--color-coral);
+            background: var(--color-surface);
+            box-shadow: 0 0 0 1px var(--color-coral), var(--shadow-lg);
+        }
+
+        .pricing-card.featured:hover {
+            box-shadow: 0 0 0 1px var(--color-coral), 0 12px 48px rgba(240, 101, 67, 0.12);
+        }
+
+        .popular-badge {
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--color-coral);
+            color: #fff;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 4px 16px;
+            border-radius: var(--radius-full);
+            white-space: nowrap;
+        }
+
+        .pricing-tier {
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--color-text-muted);
+            margin-bottom: 8px;
+        }
+
+        .pricing-name {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--color-text);
+            margin-bottom: 16px;
+            letter-spacing: -0.02em;
+        }
+
+        .pricing-price {
+            margin-bottom: 8px;
+            display: flex;
+            align-items: baseline;
+            gap: 4px;
+        }
+
+        .pricing-amount {
+            font-size: 40px;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            color: var(--color-text);
+            line-height: 1;
+        }
+
+        .pricing-period {
+            font-size: 14px;
+            color: var(--color-text-muted);
+            font-weight: 500;
+        }
+
+        .pricing-yearly-note {
+            font-size: 13px;
+            color: var(--color-coral);
+            font-weight: 500;
+            margin-bottom: 24px;
+            min-height: 18px;
+        }
+
+        .pricing-desc {
+            font-size: 14px;
+            color: var(--color-text-secondary);
+            line-height: 1.6;
+            margin-bottom: 28px;
+            padding-bottom: 28px;
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .pricing-features {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            margin-bottom: 32px;
+            flex: 1;
+        }
+
+        .pricing-features li {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            font-size: 14px;
+            color: var(--color-text-secondary);
+            line-height: 1.5;
+        }
+
+        .pricing-features li i {
+            flex-shrink: 0;
+            margin-top: 2px;
+            font-size: 16px;
+        }
+
+        .pricing-features li i.check {
+            color: #16a34a;
+        }
+
+        .pricing-features li i.star {
+            color: var(--color-coral);
+        }
+
+        .pricing-features li strong {
+            color: var(--color-text);
+            font-weight: 600;
+        }
+
+        .pricing-cta {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 14px 28px;
+            font-size: 15px;
+            font-weight: 600;
+            border-radius: var(--radius-full);
+            border: none;
+            cursor: pointer;
+            transition: all 0.25s;
+            width: 100%;
+            text-align: center;
+        }
+
+        .pricing-cta.outline {
+            background: var(--color-surface);
+            color: var(--color-text);
+            border: 1px solid var(--color-border);
+        }
+
+        .pricing-cta.outline:hover {
+            background: #f1f5f9;
+            border-color: #cbd5e1;
+        }
+
+        .pricing-cta.filled {
+            background: var(--color-accent);
+            color: #fff;
+        }
+
+        .pricing-cta.filled:hover {
+            background: #000;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+        }
+
+        /* pricing-grid mobile handled in main responsive block above */
+
+        /* ===== WAITLIST SECTION ===== */
+        .waitlist-section {
+            padding: 80px 32px 100px;
+            background: var(--color-bg);
+        }
+
+        .waitlist-card {
+            max-width: 680px;
+            margin: 0 auto;
+            background: linear-gradient(145deg, #0f172a 0%, #1a2540 60%, #0f172a 100%);
+            border-radius: 32px;
+            padding: 64px 56px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            box-shadow: 0 32px 80px rgba(0, 0, 0, 0.18);
+        }
+
+        .waitlist-card::before {
+            content: '';
+            position: absolute;
+            top: -120px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 500px;
+            height: 300px;
+            background: radial-gradient(ellipse, rgba(240, 101, 67, 0.18) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .waitlist-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(240, 101, 67, 0.15);
+            color: #fb9272;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            padding: 6px 14px;
+            border-radius: 999px;
+            border: 1px solid rgba(240, 101, 67, 0.25);
+            margin-bottom: 28px;
+        }
+
+        .waitlist-card h2 {
+            font-size: clamp(28px, 4vw, 42px);
+            font-weight: 700;
+            letter-spacing: -0.03em;
+            line-height: 1.15;
+            color: #fff;
+            margin-bottom: 16px;
+        }
+
+        .waitlist-card p {
+            font-size: 16px;
+            color: rgba(255, 255, 255, 0.5);
+            line-height: 1.7;
+            max-width: 440px;
+            margin: 0 auto 36px;
+        }
+
+        .waitlist-form {
+            display: flex;
+            gap: 10px;
+            max-width: 460px;
+            margin: 0 auto;
+        }
+
+        .waitlist-input {
+            flex: 1;
+            padding: 14px 20px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 999px;
+            color: #fff;
+            font-size: 15px;
+            font-family: var(--font-sans);
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .waitlist-input::placeholder {
+            color: rgba(255, 255, 255, 0.3);
+        }
+
+        .waitlist-input:focus {
+            border-color: rgba(240, 101, 67, 0.5);
+        }
+
+        .waitlist-btn {
+            padding: 14px 26px;
+            background: var(--color-coral);
+            color: #fff;
+            font-size: 15px;
+            font-weight: 600;
+            border-radius: 999px;
+            border: none;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s;
+            font-family: var(--font-sans);
+        }
+
+        .waitlist-btn:hover {
+            background: var(--color-coral-dark);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(240, 101, 67, 0.35);
+        }
+
+        .waitlist-success {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            margin-top: 4px;
+        }
+
+        .waitlist-success.show {
+            display: flex;
+        }
+
+        .waitlist-success-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            background: rgba(22, 163, 74, 0.15);
+            border: 1px solid rgba(22, 163, 74, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            color: #4ade80;
+        }
+
+        .waitlist-success p {
+            font-size: 15px;
+            color: rgba(255, 255, 255, 0.6);
+            margin: 0;
+        }
+
+        .waitlist-success strong {
+            color: #fff;
+        }
+
+        .waitlist-note {
+            margin-top: 20px;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.25);
+        }
+
+        @media (max-width: 560px) {
+            .waitlist-card {
+                padding: 48px 28px;
+            }
+
+            .waitlist-form {
+                flex-direction: column;
+            }
+
+            .waitlist-btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Announcement Bar -->
+    <!--  <div class="announcement-bar">
+        <span class="dot"></span>
+        <span>Your personal PDF assistant, right inside WhatsApp.</span>
+        <a href="#features">See what you can do <i class="ph-bold ph-arrow-right"></i></a>
+    </div> -->
+
+    <!-- Navigation -->
+    <nav class="nav-wrapper" id="nav">
+        <div class="nav">
+            <a href="#" class="nav-logo">QuickPDF<span>Assistant</span></a>
+            <ul class="nav-links">
+                <li><a href="#features">Features</a></li>
+                <li><a href="#capabilities">All tools</a></li>
+                <li><a href="#pricing">Pricing</a></li>
+            </ul>
+            <a href="#waitlist" class="nav-cta">Get Early Access</a>
+            <button class="nav-mobile-btn" id="mobile-menu-btn" aria-label="Menu">
+                <i class="ph ph-list"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu Overlay -->
+    <div class="mobile-menu" id="mobile-menu">
+        <div class="mobile-menu-backdrop" id="mobile-menu-backdrop"></div>
+        <div class="mobile-menu-panel">
+            <div class="mobile-menu-header">
+                <a href="#" class="nav-logo">QuickPDF<span>Assistant</span></a>
+                <button class="mobile-menu-close" id="mobile-menu-close" aria-label="Close menu">
+                    <i class="ph ph-x"></i>
+                </button>
+            </div>
+            <ul class="mobile-menu-links">
+                <li><a href="#features" class="mobile-nav-link">Features</a></li>
+                <li><a href="#pricing" class="mobile-nav-link">Pricing</a></li>
+                <li><a href="#capabilities" class="mobile-nav-link">All Tools</a></li>
+                <li><a href="#how-it-works" class="mobile-nav-link">How It Works</a></li>
+            </ul>
+            <a href="#waitlist" class="mobile-menu-cta">
+                Get Early Access
+                <i class="ph-bold ph-arrow-right"></i>
+            </a>
+        </div>
+    </div>
+
+    <!-- Hero -->
+    <section class="hero" id="hero">
+        <div class="hero-gradient"></div>
+        <div class="hero-content reveal">
+            <h1>
+                Your PDF Powerhouse,<br>
+                <span class="muted">right on WhatsApp.</span>
+            </h1>
+            <p class="hero-subtitle">
+                Merge, split, compress, and convert PDFs instantly on WhatsApp -no apps to install,no shady websites to
+                visit, no
+                signups.
+
+            </p>
+            <div class="hero-actions">
+                <a href="#waitlist" class="btn-primary">
+                    Get Early Access
+                    <i class="ph-bold ph-arrow-right"></i>
+                </a>
+                <a href="#how-it-works" class="btn-outline">See how it works</a>
+            </div>
+        </div>
+
+        <!-- Trust Bar -->
+        <div class="trust-bar reveal">
+            <p class="trust-bar-label">Why people <strong>love it</strong></p>
+            <div class="trust-ticker-wrapper">
+                <div class="trust-ticker">
+                    <!-- Set 1 -->
+                    <span class="trust-tag">Works right in WhatsApp</span>
+                    <span class="trust-dot">&middot;</span>
+                    <span class="trust-tag">No app to install</span>
+                    <span class="trust-dot">&middot;</span>
+                    <span class="trust-tag">No account needed</span>
+                    <span class="trust-dot">&middot;</span>
+                    <span class="trust-tag">Files auto-deleted after processing</span>
+                    <span class="trust-dot">&middot;</span>
+                    <span class="trust-tag">Results in seconds</span>
+                    <span class="trust-dot">&middot;</span>
+                    <span class="trust-tag">Free to start</span>
+                    <span class="trust-dot">&middot;</span>
+                    <span class="trust-tag">Works on any phone</span>
+                    <span class="trust-dot">&middot;</span>
+                    <span class="trust-tag">No browser tabs needed</span>
+                    <span class="trust-dot">&middot;</span>
+                    <span class="trust-tag">Zero learning curve</span>
+                    <span class="trust-dot">&middot;</span>
+                    <span class="trust-tag">100% private</span>
+                    <span class="trust-dot">&middot;</span>
+                    <!-- Set 2 (duplicate for seamless loop) -->
+                    <span class="trust-tag">Works right in WhatsApp</span>
+                    <span class="trust-dot">&middot;</span>
+                    <span class="trust-tag">No app to install</span>
+                    <span class="trust-dot">&middot;</span>
+                    <span class="trust-tag">No account needed</span>
+                    <span class="trust-dot">&middot;</span>
+                    <span class="trust-tag">Files auto-deleted after processing</span>
+                    <span class="trust-dot">&middot;</span>
+                    <span class="trust-tag">Results in seconds</span>
+                    <span class="trust-dot">&middot;</span>
+                    <span class="trust-tag">Free to start</span>
+                    <span class="trust-dot">&middot;</span>
+                    <span class="trust-tag">Works on any phone</span>
+                    <span class="trust-dot">&middot;</span>
+                    <span class="trust-tag">No browser tabs needed</span>
+                    <span class="trust-dot">&middot;</span>
+                    <span class="trust-tag">Zero learning curve</span>
+                    <span class="trust-dot">&middot;</span>
+                    <span class="trust-tag">100% private</span>
+                    <span class="trust-dot">&middot;</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Product Video Showcase -->
+        <div class="hero-showcase reveal">
+            <div class="video-wrapper">
+                <video autoplay muted loop playsinline>
+                    <source src="demo.mp4" type="video/mp4">
+                </video>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section (Tabbed) -->
+    <section class="features-section" id="features">
+        <div class="features-header reveal">
+            <h2>
+                Powerful tools,<br>
+                <span class="muted">simple conversations.</span>
+            </h2>
+            <p>Everything you need to manage your PDFs, right from your chat. No learning curve.</p>
+        </div>
+
+        <div class="tabs-wrapper">
+            <div class="tabs-nav reveal">
+                <button class="tab-btn active" data-tab="merge">
+                    <i class="ph ph-copy"></i> Merge & Split
+                </button>
+                <button class="tab-btn" data-tab="compress">
+                    <i class="ph ph-arrows-in-line-horizontal"></i> Compress
+                </button>
+                <button class="tab-btn" data-tab="convert">
+                    <i class="ph ph-arrows-left-right"></i> Convert
+                </button>
+                <button class="tab-btn" data-tab="protect">
+                    <i class="ph ph-shield-check"></i> Protect
+                </button>
+            </div>
+
+            <!-- Merge & Split -->
+            <div class="tab-panel active" id="tab-merge">
+                <div class="feature-layout">
+                    <div class="feature-text">
+                        <h3>Merge & split PDFs<br><span class="muted">in seconds</span></h3>
+                        <p>Combine multiple documents into one polished file, or pull out exactly the pages you need.
+                            Just send your files, tell the bot what you want, and you're done.</p>
+                        <a href="https://wa.me/" class="cta-link">Try it now <i class="ph-bold ph-arrow-right"></i></a>
+                    </div>
+                    <div class="feature-visual">
+                        <div class="feature-visual-inner">
+                            <div class="feature-icon-large orange">
+                                <i class="ph-duotone ph-copy"></i>
+                            </div>
+                            <span class="feature-visual-label">Send 3 PDFs → Get 1 merged file</span>
+                            <span class="feature-visual-sublabel">Supports up to 200 pages per file</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="stats-row reveal">
+                    <div class="stat-item">
+                        <div class="stat-number">200</div>
+                        <div class="stat-label">Max pages per document</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">&lt;5s</div>
+                        <div class="stat-label">Average processing time</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">100%</div>
+                        <div class="stat-label">Quality preserved</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Compress -->
+            <div class="tab-panel" id="tab-compress">
+                <div class="feature-layout">
+                    <div class="feature-text">
+                        <h3>Smart compression<br><span class="muted">without quality loss</span></h3>
+                        <p>Shrink your file sizes to fit email limits while keeping things looking great. Perfect for
+                            homework, invoices, resumes, or any document you need to send quickly.</p>
+                        <a href="https://wa.me/" class="cta-link">Try it now <i class="ph-bold ph-arrow-right"></i></a>
+                    </div>
+                    <div class="feature-visual">
+                        <div class="feature-visual-inner">
+                            <div class="feature-icon-large blue">
+                                <i class="ph-duotone ph-arrows-in-line-horizontal"></i>
+                            </div>
+                            <span class="feature-visual-label">20MB → 2MB</span>
+                            <span class="feature-visual-sublabel">Up to 90% file size reduction</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="stats-row reveal">
+                    <div class="stat-item">
+                        <div class="stat-number">90%</div>
+                        <div class="stat-label">Maximum compression ratio</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">3</div>
+                        <div class="stat-label">Compression quality presets</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">0</div>
+                        <div class="stat-label">Visible quality difference</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Convert -->
+            <div class="tab-panel" id="tab-convert">
+                <div class="feature-layout">
+                    <div class="feature-text">
+                        <h3>Format conversion<br><span class="muted">made effortless</span></h3>
+                        <p>Turn Word docs, PowerPoint slides, or images into PDFs with a single message. You can also
+                            convert PDFs back to images or Word files when you need to.</p>
+                        <a href="https://wa.me/" class="cta-link">Try it now <i class="ph-bold ph-arrow-right"></i></a>
+                    </div>
+                    <div class="feature-visual">
+                        <div class="feature-visual-inner">
+                            <div class="feature-icon-large green">
+                                <i class="ph-duotone ph-arrows-left-right"></i>
+                            </div>
+                            <span class="feature-visual-label">DOCX, PPTX, Images → PDF</span>
+                            <span class="feature-visual-sublabel">Automatic format detection</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="stats-row reveal">
+                    <div class="stat-item">
+                        <div class="stat-number">5+</div>
+                        <div class="stat-label">Supported input formats</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">Auto</div>
+                        <div class="stat-label">Format detection</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">10</div>
+                        <div class="stat-label">Max pages for PDF-to-Image</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Protect -->
+            <div class="tab-panel" id="tab-protect">
+                <div class="feature-layout">
+                    <div class="feature-text">
+                        <h3>Privacy first<br><span class="muted">security built in</span></h3>
+                        <p>Lock your PDFs with a password before sharing, or unlock protected files when you need
+                            access. All files are auto-deleted right after you get your result—nothing is kept.</p>
+                        <a href="https://wa.me/" class="cta-link">Try it now <i class="ph-bold ph-arrow-right"></i></a>
+                    </div>
+                    <div class="feature-visual">
+                        <div class="feature-visual-inner">
+                            <div class="feature-icon-large purple">
+                                <i class="ph-duotone ph-shield-check"></i>
+                            </div>
+                            <span class="feature-visual-label">Lock & unlock with a command</span>
+                            <span class="feature-visual-sublabel">Auto-deleted after processing</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="stats-row reveal">
+                    <div class="stat-item">
+                        <div class="stat-number">256-bit</div>
+                        <div class="stat-label">AES encryption strength</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">Auto</div>
+                        <div class="stat-label">File cleanup after processing</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">0</div>
+                        <div class="stat-label">Files stored permanently</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works -->
+    <section class="how-section" id="how-it-works">
+        <div class="how-header reveal">
+            <h2>How it works</h2>
+            <p>Three steps. That's literally it.</p>
+        </div>
+
+        <div class="steps-grid">
+            <div class="step-card reveal">
+                <div class="step-badge coral">Step 1</div>
+                <div class="step-icon-wrap coral">
+                    <i class="ph-duotone ph-whatsapp-logo"></i>
+                </div>
+                <h3>Open WhatsApp</h3>
+                <p>Tap the chat button or save our number — no downloads or signups required.</p>
+            </div>
+
+            <div class="step-connector reveal">
+                <svg viewBox="0 0 48 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <line x1="0" y1="12" x2="38" y2="12" stroke="currentColor" stroke-width="2"
+                        stroke-dasharray="4 4" />
+                    <polyline points="34,6 42,12 34,18" stroke="currentColor" stroke-width="2" fill="none"
+                        stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+            </div>
+
+            <div class="step-card reveal">
+                <div class="step-badge blue">Step 2</div>
+                <div class="step-icon-wrap blue">
+                    <i class="ph-duotone ph-paper-plane-tilt"></i>
+                </div>
+                <h3>Send your file</h3>
+                <p>Drop your PDF, image, or document into the chat and pick what you need from the menu.</p>
+            </div>
+
+            <div class="step-connector reveal">
+                <svg viewBox="0 0 48 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <line x1="0" y1="12" x2="38" y2="12" stroke="currentColor" stroke-width="2"
+                        stroke-dasharray="4 4" />
+                    <polyline points="34,6 42,12 34,18" stroke="currentColor" stroke-width="2" fill="none"
+                        stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+            </div>
+
+            <div class="step-card reveal">
+                <div class="step-badge green">Step 3</div>
+                <div class="step-icon-wrap green">
+                    <i class="ph-duotone ph-check-circle"></i>
+                </div>
+                <h3>Get your result</h3>
+                <p>Your processed file lands right back in your chat, ready to forward or download.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- All Capabilities -->
+    <section class="capabilities-section" id="capabilities">
+        <div class="capabilities-header reveal">
+            <h2>Everything you can do <span class="muted">in one chat</span></h2>
+            <p>All the PDF tools you'd ever need, accessible with a simple message.</p>
+        </div>
+        <div class="capabilities-list reveal">
+            <div class="capability-item" data-tab-target="merge">
+                <i class="ph-duotone ph-copy"></i>
+                <div class="cap-text">
+                    <strong>Merge PDFs</strong>
+                    <span>Combine multiple files into one</span>
+                </div>
+                <i class="ph ph-arrow-right cap-arrow"></i>
+            </div>
+            <div class="capability-item" data-tab-target="merge">
+                <i class="ph-duotone ph-scissors"></i>
+                <div class="cap-text">
+                    <strong>Split PDF</strong>
+                    <span>Extract specific pages</span>
+                </div>
+                <i class="ph ph-arrow-right cap-arrow"></i>
+            </div>
+            <div class="capability-item" data-tab-target="compress">
+                <i class="ph-duotone ph-arrows-in-line-horizontal"></i>
+                <div class="cap-text">
+                    <strong>Compress PDF</strong>
+                    <span>Reduce file size up to 90%</span>
+                </div>
+                <i class="ph ph-arrow-right cap-arrow"></i>
+            </div>
+            <div class="capability-item" data-tab-target="protect">
+                <i class="ph-duotone ph-lock"></i>
+                <div class="cap-text">
+                    <strong>Lock / Unlock PDF</strong>
+                    <span>Add or remove password protection</span>
+                </div>
+                <i class="ph ph-arrow-right cap-arrow"></i>
+            </div>
+            <div class="capability-item" data-tab-target="convert">
+                <i class="ph-duotone ph-file-doc"></i>
+                <div class="cap-text">
+                    <strong>DOCX ↔ PDF</strong>
+                    <span>Convert Word documents to and from PDF</span>
+                </div>
+                <i class="ph ph-arrow-right cap-arrow"></i>
+            </div>
+            <div class="capability-item" data-tab-target="convert">
+                <i class="ph-duotone ph-presentation-chart"></i>
+                <div class="cap-text">
+                    <strong>PPTX → PDF</strong>
+                    <span>PowerPoint slides to PDF</span>
+                </div>
+                <i class="ph ph-arrow-right cap-arrow"></i>
+            </div>
+            <div class="capability-item" data-tab-target="convert">
+                <i class="ph-duotone ph-image"></i>
+                <div class="cap-text">
+                    <strong>Images → PDF</strong>
+                    <span>Turn photos into a PDF document</span>
+                </div>
+                <i class="ph ph-arrow-right cap-arrow"></i>
+            </div>
+            <div class="capability-item" data-tab-target="convert">
+                <i class="ph-duotone ph-file-image"></i>
+                <div class="cap-text">
+                    <strong>PDF → Images</strong>
+                    <span>Extract pages as JPG images (max 10 pages)</span>
+                </div>
+                <i class="ph ph-arrow-right cap-arrow"></i>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section class="pricing-section" id="pricing">
+        <div class="pricing-header reveal">
+            <h2>Simple, honest <span class="muted">pricing.</span></h2>
+            <p>Start free, upgrade when you need more. No hidden fees, cancel anytime.</p>
+        </div>
+
+        <div class="billing-toggle reveal">
+            <span class="active-label" id="label-monthly">Monthly</span>
+            <div class="toggle-switch" id="billing-toggle"></div>
+            <span id="label-yearly">Yearly</span>
+            <span class="save-badge">Save 33%</span>
+        </div>
+
+        <div class="pricing-grid reveal">
+            <!-- Free Tier -->
+            <div class="pricing-card">
+                <div class="pricing-tier">Free forever</div>
+                <div class="pricing-name">Freemium</div>
+                <div class="pricing-price">
+                    <span class="pricing-amount">₹0</span>
+                    <span class="pricing-period">/month</span>
+                </div>
+                <div class="pricing-yearly-note">&nbsp;</div>
+                <p class="pricing-desc">Everything you need to get started. Perfect for occasional use.</p>
+                <ul class="pricing-features">
+                    <li><i class="ph-bold ph-check check"></i><span><strong>3 operations</strong> per day</span></li>
+                    <li><i class="ph-bold ph-check check"></i><span>File size up to <strong>25MB</strong></span></li>
+                    <li><i class="ph-bold ph-check check"></i><span>All core features included</span></li>
+                    <li><i class="ph-bold ph-check check"></i><span>Merge, split, compress, convert</span></li>
+                    <li><i class="ph-bold ph-check check"></i><span>Password lock & unlock</span></li>
+                    <li><i class="ph-bold ph-check check"></i><span>Standard automated support</span></li>
+                </ul>
+                <a href="#waitlist" class="pricing-cta outline">
+                    Join Waitlist
+                    <i class="ph-bold ph-arrow-right"></i>
+                </a>
+            </div>
+
+            <!-- Pro Tier -->
+            <div class="pricing-card featured">
+                <div class="popular-badge">Most Popular</div>
+                <div class="pricing-tier">For power users</div>
+                <div class="pricing-name">QuickPDF Pro</div>
+                <div class="pricing-price">
+                    <span class="pricing-amount" id="pro-price">₹99</span>
+                    <span class="pricing-period" id="pro-period">/month</span>
+                </div>
+                <div class="pricing-yearly-note" id="pro-yearly-note">&nbsp;</div>
+                <p class="pricing-desc">For anyone who works with PDFs regularly and needs bigger limits.</p>
+                <ul class="pricing-features">
+                    <li><i class="ph-bold ph-star star"></i><span><strong>50 operations</strong> per day</span></li>
+                    <li><i class="ph-bold ph-star star"></i><span>File size up to <strong>50MB</strong></span></li>
+                    <li><i class="ph-bold ph-star star"></i><span><strong>Unlimited pages</strong> per document</span>
+                    </li>
+                    <li><i class="ph-bold ph-star star"></i><span><strong>PDF to Word</strong> (DOCX) conversion</span>
+                    </li>
+                    <li><i class="ph-bold ph-star star"></i><span>Batch images to PDF <strong>(up to 100
+                                images)</strong></span></li>
+                    <li><i class="ph-bold ph-check check"></i><span>Everything in Free, plus more</span></li>
+                </ul>
+                <a href="#waitlist" class="pricing-cta filled">
+                    Get Early Access
+                    <i class="ph-bold ph-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Waitlist / Early Access Section -->
+    <section class="waitlist-section" id="waitlist">
+        <div class="waitlist-card reveal">
+            <div class="waitlist-badge">
+                <i class="ph-fill ph-rocket-launch"></i>
+                Coming Soon
+            </div>
+            <h2>Be the first to get access.</h2>
+            <p>QuickPDF Assistant is almost ready. Drop your email and we'll notify you the moment it launches — plus
+                early birds get free Pro access for 30 days.</p>
+
+            <div id="waitlist-form-wrap">
+                <form class="waitlist-form" id="waitlist-form" onsubmit="handleWaitlist(event)">
+                    <input type="email" class="waitlist-input" id="waitlist-email"
+                        placeholder="Enter your email address" required />
+                    <button type="submit" class="waitlist-btn">Notify Me</button>
+                </form>
+                <p class="waitlist-note">No spam, ever. Unsubscribe anytime.</p>
+            </div>
+
+            <div class="waitlist-success" id="waitlist-success">
+                <div class="waitlist-success-icon">
+                    <i class="ph-bold ph-check"></i>
+                </div>
+                <p><strong>You're on the list!</strong><br>We'll email you as soon as QuickPDF Assistant is live.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Floating CTA -->
+    <div class="floating-cta" id="floating-cta">
+        <span>QuickPDF is launching soon</span>
+        <a href="#waitlist" class="floating-cta-btn">
+            Get Early Access <i class="ph-bold ph-arrow-right"></i>
+        </a>
+        <a href="#features" class="floating-cta-link">Explore features</a>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-inner">
+            <div class="footer-logo">QuickPDF<span>Assistant</span></div>
+            <div class="footer-links">
+                <a href="#">Documentation</a>
+                <a href="#">Privacy</a>
+                <a href="#">Terms</a>
+            </div>
+            <div class="footer-copy">&copy; 2026 QuickPDF Assistant.</div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script>
+        // === Sticky nav shadow ===
+        const nav = document.getElementById('nav');
+        window.addEventListener('scroll', () => {
+            nav.classList.toggle('scrolled', window.scrollY > 10);
+        });
+
+        // === Mobile menu ===
+        const mobileMenu = document.getElementById('mobile-menu');
+        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+        const mobileMenuClose = document.getElementById('mobile-menu-close');
+        const mobileMenuBackdrop = document.getElementById('mobile-menu-backdrop');
+
+        function openMobileMenu() {
+            mobileMenu.classList.add('open');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeMobileMenu() {
+            mobileMenu.classList.remove('open');
+            document.body.style.overflow = '';
+        }
+
+        mobileMenuBtn.addEventListener('click', openMobileMenu);
+        mobileMenuClose.addEventListener('click', closeMobileMenu);
+        mobileMenuBackdrop.addEventListener('click', closeMobileMenu);
+
+        // Close menu when clicking a nav link
+        document.querySelectorAll('.mobile-nav-link').forEach(link => {
+            link.addEventListener('click', closeMobileMenu);
+        });
+
+        // === Tab switching ===
+        const tabBtns = document.querySelectorAll('.tab-btn');
+        const tabPanels = document.querySelectorAll('.tab-panel');
+
+        tabBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const target = btn.dataset.tab;
+
+                tabBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+
+                tabPanels.forEach(panel => {
+                    panel.classList.remove('active');
+                    if (panel.id === `tab-${target}`) {
+                        panel.classList.add('active');
+                    }
+                });
+            });
+        });
+
+        // === Scroll reveal ===
+        const reveals = document.querySelectorAll('.reveal');
+        const revealObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                    revealObserver.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
+
+        reveals.forEach(el => revealObserver.observe(el));
+
+        // === Floating CTA (show after scrolling past hero) ===
+        const floatingCta = document.getElementById('floating-cta');
+        const hero = document.getElementById('hero');
+
+        const floatingObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                floatingCta.classList.toggle('visible', !entry.isIntersecting);
+            });
+        }, { threshold: 0 });
+
+        floatingObserver.observe(hero);
+
+        // === Billing toggle ===
+        const billingToggle = document.getElementById('billing-toggle');
+        const labelMonthly = document.getElementById('label-monthly');
+        const labelYearly = document.getElementById('label-yearly');
+        const proPrice = document.getElementById('pro-price');
+        const proPeriod = document.getElementById('pro-period');
+        const proYearlyNote = document.getElementById('pro-yearly-note');
+        let isYearly = false;
+
+        billingToggle.addEventListener('click', () => {
+            isYearly = !isYearly;
+            billingToggle.classList.toggle('yearly', isYearly);
+            labelMonthly.classList.toggle('active-label', !isYearly);
+            labelYearly.classList.toggle('active-label', isYearly);
+
+            if (isYearly) {
+                proPrice.textContent = '₹799';
+                proPeriod.textContent = '/year';
+                proYearlyNote.textContent = 'That\'s just ₹67/month';
+            } else {
+                proPrice.textContent = '₹99';
+                proPeriod.textContent = '/month';
+                proYearlyNote.innerHTML = '&nbsp;';
+            }
+        });
+
+        // === Capability items → scroll to features tab ===
+        document.querySelectorAll('.capability-item[data-tab-target]').forEach(item => {
+            item.addEventListener('click', () => {
+                const targetTab = item.dataset.tabTarget;
+
+                // Switch to the correct tab
+                tabBtns.forEach(b => b.classList.remove('active'));
+                tabPanels.forEach(p => p.classList.remove('active'));
+
+                const matchingBtn = document.querySelector(`.tab-btn[data-tab="${targetTab}"]`);
+                const matchingPanel = document.getElementById(`tab-${targetTab}`);
+                if (matchingBtn) matchingBtn.classList.add('active');
+                if (matchingPanel) matchingPanel.classList.add('active');
+
+                // Smooth scroll to features section
+                document.getElementById('features').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            });
+        });
+
+        // === Waitlist form ===
+        function handleWaitlist(e) {
+            e.preventDefault();
+            const email = document.getElementById('waitlist-email').value;
+            if (!email) return;
+            // Hide form, show success
+            document.getElementById('waitlist-form-wrap').style.display = 'none';
+            document.getElementById('waitlist-success').classList.add('show');
+            // You can POST to your backend here:
+            // fetch('/subscribe', { method: 'POST', body: JSON.stringify({ email }), headers: { 'Content-Type': 'application/json' } });
+            console.log('Waitlist signup:', email);
+        }
+    </script>
+
+</body>
+
+</html>
