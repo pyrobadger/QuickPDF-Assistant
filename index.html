@@ -2267,8 +2267,9 @@
 
             <div id="waitlist-form-wrap">
                 <form class="waitlist-form" id="waitlist-form" onsubmit="handleWaitlist(event)">
-                    <input type="tel" class="waitlist-input" id="waitlist-phone" placeholder="+91 Your phone number"
-                        pattern="[+]?[0-9\s-]{10,15}" required />
+                    <input type="tel" class="waitlist-input" id="waitlist-phone"
+                        placeholder="Your 10-digit phone number" pattern="[0-9]{10}" minlength="10" maxlength="10"
+                        required />
                     <button type="submit" class="waitlist-btn">Notify Me</button>
                 </form>
 
@@ -2455,9 +2456,9 @@
             document.getElementById('waitlist-form-wrap').style.display = 'none';
             document.getElementById('waitlist-success').classList.add('show');
 
-            // Post to the local backend to save in CSV
-            // Using absolute localhost URL so it works even if you open the HTML file directly
-            fetch('http://localhost:3000/api/waitlist', {
+            // Post to your deployed backend
+            // Using your production domain so it works for users visiting your site
+            fetch('https://quickpdfassistant.in/api/waitlist', {
                 method: 'POST',
                 body: JSON.stringify({ phone }),
                 headers: { 'Content-Type': 'application/json' }

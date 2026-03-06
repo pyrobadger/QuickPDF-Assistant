@@ -23,8 +23,14 @@ app.post('/api/waitlist', (req, res) => {
     const phone = req.body.phone;
     if (!phone) return res.status(400).json({ error: 'Phone number missing' });
 
+    // Sanitize and validate - must be exactly 10 digits to prevent injection
+    const sanitizedPhone = String(phone).trim();
+    if (!/^\d{10}$/.test(sanitizedPhone)) {
+        return res.status(400).json({ error: 'Invalid phone number. Must be exactly 10 digits.' });
+    }
+
     // Append to CSV file (creates it if it doesn't exist)
-    const csvLine = `"${phone}","${new Date().toISOString()}"\n`;
+    const csvLine = `"${sanitizedPhone}","${new Date().toISOString()}"\n`;
     const filePath = path.join(__dirname, 'waitlist.csv');
 
     // Add header if file doesn't exist
