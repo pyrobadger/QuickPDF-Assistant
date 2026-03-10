@@ -23,6 +23,14 @@
     <!-- Phosphor Icons -->
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
 
+    <!-- Pre-load Dark Mode -->
+    <script>
+        const savedTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        if (savedTheme === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+        }
+    </script>
+
     <style>
         /* ===== RESET & BASE ===== */
         *,
@@ -53,6 +61,131 @@
             --shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.03), 0 1px 1px rgba(0, 0, 0, 0.04);
             --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.04);
             --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.06);
+        }
+
+        [data-theme="dark"] {
+            --color-bg: #0f172a;
+            --color-surface: #1e293b;
+            --color-text: #f8fafc;
+            --color-text-secondary: #cbd5e1;
+            --color-text-muted: #94a3b8;
+            --color-border: #334155;
+            --color-accent: #ffffff;
+            --shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.2), 0 1px 1px rgba(0, 0, 0, 0.3);
+            --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.4);
+            --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.5);
+        }
+
+        [data-theme="dark"] .nav-wrapper {
+            background: rgba(15, 23, 42, 0.85);
+        }
+
+        [data-theme="dark"] .btn-primary,
+        [data-theme="dark"] .nav-cta,
+        [data-theme="dark"] .mobile-menu-cta,
+        [data-theme="dark"] .pricing-cta.filled {
+            color: #0f172a;
+        }
+
+        [data-theme="dark"] .btn-primary:hover,
+        [data-theme="dark"] .nav-cta:hover,
+        [data-theme="dark"] .mobile-menu-cta:hover,
+        [data-theme="dark"] .pricing-cta.filled:hover {
+            background: #e2e8f0;
+        }
+
+        [data-theme="dark"] .hero-gradient {
+            background: radial-gradient(ellipse 80% 60% at 50% 20%,
+                    rgba(240, 101, 67, 0.15) 0%,
+                    rgba(255, 154, 139, 0.1) 25%,
+                    rgba(200, 160, 240, 0.08) 50%,
+                    rgba(15, 23, 42, 0) 80%);
+        }
+
+        [data-theme="dark"] .hero-capsule {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: var(--color-border);
+        }
+
+        [data-theme="dark"] .video-wrapper {
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+        }
+
+        [data-theme="dark"] .tab-btn.active {
+            background: var(--color-border);
+            border-color: var(--color-border);
+        }
+
+        [data-theme="dark"] .feature-card-icon.orange {
+            background: rgba(240, 101, 67, 0.15);
+        }
+
+        [data-theme="dark"] .feature-card-icon.blue {
+            background: rgba(59, 130, 246, 0.15);
+        }
+
+        [data-theme="dark"] .feature-card-icon.green {
+            background: rgba(22, 163, 74, 0.15);
+        }
+
+        [data-theme="dark"] .feature-card-icon.purple {
+            background: rgba(168, 85, 247, 0.15);
+        }
+
+        [data-theme="dark"] .stats-row {
+            background: var(--color-border);
+            border-color: var(--color-border);
+        }
+
+        [data-theme="dark"] .comparison-card.highlight {
+            background: rgba(240, 101, 67, 0.03);
+        }
+
+        [data-theme="dark"] .toggle-switch {
+            background: var(--color-border);
+        }
+
+        [data-theme="dark"] .save-badge {
+            background: rgba(240, 101, 67, 0.15);
+        }
+
+        [data-theme="dark"] .pricing-card.featured {
+            background: rgba(240, 101, 67, 0.03);
+            box-shadow: 0 0 0 1px var(--color-coral), var(--shadow-lg);
+        }
+
+        [data-theme="dark"] .pricing-cta.outline {
+            color: var(--color-text);
+            background: transparent;
+        }
+
+        [data-theme="dark"] .pricing-cta.outline:hover {
+            background: var(--color-border);
+        }
+
+        [data-theme="dark"] .waitlist-badge {
+            background: rgba(240, 101, 67, 0.15);
+        }
+
+        [data-theme="dark"] .waitlist-input {
+            background: var(--color-bg);
+            color: #f8fafc;
+        }
+
+        [data-theme="dark"] .waitlist-success-icon {
+            background: rgba(22, 163, 74, 0.15);
+        }
+
+        [data-theme="dark"] .floating-cta {
+            color: #0f172a;
+        }
+
+        [data-theme="dark"] .floating-cta-link {
+            color: rgba(15, 23, 42, 0.7);
+        }
+
+        [data-theme="dark"] .floating-cta-link:hover {
+            color: #0f172a;
         }
 
         html {
@@ -187,6 +320,35 @@
             font-weight: 500;
             color: var(--color-text-secondary);
             transition: color 0.2s;
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .theme-toggle-btn {
+            background: none;
+            border: none;
+            color: var(--color-text-secondary);
+            font-size: 20px;
+            cursor: pointer;
+            padding: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.2s;
+        }
+
+        .theme-toggle-btn:hover {
+            background: rgba(0, 0, 0, 0.05);
+            color: var(--color-text);
+        }
+
+        [data-theme="dark"] .theme-toggle-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
         }
 
         .nav-links a:hover {
@@ -1911,10 +2073,15 @@
                 <li><a href="#comparison">Why QuickPDF</a></li>
                 <li><a href="#pricing">Pricing</a></li>
             </ul>
-            <a href="#waitlist" class="nav-cta">Get Early Access</a>
-            <button class="nav-mobile-btn" id="mobile-menu-btn" aria-label="Menu">
-                <i class="ph ph-list"></i>
-            </button>
+            <div class="nav-right">
+                <button class="theme-toggle-btn" id="theme-toggle" aria-label="Toggle Dark Mode">
+                    <i class="ph-bold ph-moon"></i>
+                </button>
+                <a href="#waitlist" class="nav-cta">Get Early Access</a>
+                <button class="nav-mobile-btn" id="mobile-menu-btn" aria-label="Menu">
+                    <i class="ph ph-list"></i>
+                </button>
+            </div>
         </div>
     </nav>
 
@@ -2317,6 +2484,30 @@
 
     <!-- Scripts -->
     <script>
+        // === Theme Toggle ===
+        const themeToggle = document.getElementById('theme-toggle');
+        const themeIcon = themeToggle.querySelector('i');
+        const htmlElement = document.documentElement;
+
+        // Check and sync icon with initialized theme
+        if (htmlElement.getAttribute('data-theme') === 'dark') {
+            themeIcon.classList.replace('ph-moon', 'ph-sun');
+        }
+
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = htmlElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            htmlElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            if (newTheme === 'dark') {
+                themeIcon.classList.replace('ph-moon', 'ph-sun');
+            } else {
+                themeIcon.classList.replace('ph-sun', 'ph-moon');
+            }
+        });
+
         // === Sticky nav shadow ===
         const nav = document.getElementById('nav');
         window.addEventListener('scroll', () => {
