@@ -8,7 +8,7 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 
 const { MongoClient } = require('mongodb');
-const fs = require('fs');
+//const fs = require('fs'); 
 const path = require('path');
 
 let cachedDb = null;
@@ -21,34 +21,8 @@ async function connectToDatabase() {
     return cachedDb;
 }
 
-// Serve the landing page
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
-});
-
-// Basic health check route
-app.get('/health', (req, res) => {
-    res.send('QuickPDF Assistant is running.');
-});
-
-// Explicitly serve static assets for the landing page
-const publicAssets = [
-    'image.png',
-    'demo.mp4',
-    'demo_new.mp4',
-    'favicon.ico',
-    'favicon.svg',
-    'favicon-96x96.png',
-    'apple-touch-icon.png',
-    'site.webmanifest',
-    'web-app-manifest-192x192.png',
-    'web-app-manifest-512x512.png'
-];
-publicAssets.forEach(asset => {
-    app.get(`/${asset}`, (req, res) => {
-        res.sendFile(path.join(__dirname, asset));
-    });
-});
+// Serve static assets from public folder
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Waitlist POST route
 app.post('/api/waitlist', (req, res) => {
@@ -100,3 +74,9 @@ app.use('/webhook', webhookRoutes);
 
 // Export for Vercel
 module.exports = app;
+
+if (require.main === module) {
+    app.listen(PORT, () => {
+        console.log(`Server running on port ${PORT}`);
+    });
+}
