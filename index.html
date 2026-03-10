@@ -2468,8 +2468,8 @@
             btn.disabled = true;
 
             // Post to your deployed backend
-            // Using your production domain so it works for users visiting your site
-            fetch('https://quickpdfassistant.in/api/waitlist', {
+            // Using a relative path connects directly to the backend serving this page
+            fetch('/api/waitlist', {
                 method: 'POST',
                 body: JSON.stringify({ phone }),
                 headers: { 'Content-Type': 'application/json' }

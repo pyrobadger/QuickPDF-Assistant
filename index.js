@@ -7,14 +7,50 @@ const PORT = process.env.PORT || 3000;
 // Middleware to parse JSON
 app.use(express.json());
 
-// Basic health check route
+const { MongoClient } = require('mongodb');
+const fs = require('fs');
+const path = require('path');
+
+let cachedDb = null;
+
+async function connectToDatabase() {
+    if (cachedDb) return cachedDb;
+    const client = new MongoClient(process.env.MONGODB_URI);
+    await client.connect();
+    cachedDb = client.db('quickpdf');
+    return cachedDb;
+}
+
+// Serve the landing page
 app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+// Basic health check route
+app.get('/health', (req, res) => {
     res.send('QuickPDF Assistant is running.');
 });
 
+// Explicitly serve static assets for the landing page
+const publicAssets = [
+    'image.png',
+    'demo.mp4',
+    'demo_new.mp4',
+    'favicon.ico',
+    'favicon.svg',
+    'favicon-96x96.png',
+    'apple-touch-icon.png',
+    'site.webmanifest',
+    'web-app-manifest-192x192.png',
+    'web-app-manifest-512x512.png'
+];
+publicAssets.forEach(asset => {
+    app.get(`/${asset}`, (req, res) => {
+        res.sendFile(path.join(__dirname, asset));
+    });
+});
+
 // Waitlist POST route
-const fs = require('fs');
-const path = require('path');
 app.post('/api/waitlist', (req, res) => {
     // Allow CORS for local testing if needed
     res.header('Access-Control-Allow-Origin', '*');
@@ -29,21 +65,24 @@ app.post('/api/waitlist', (req, res) => {
         return res.status(400).json({ error: 'Invalid phone number. Must be exactly 10 digits.' });
     }
 
-    // Append to CSV file (creates it if it doesn't exist)
-    const csvLine = `"${sanitizedPhone}","${new Date().toISOString()}"\n`;
-    const filePath = path.join(__dirname, 'waitlist.csv');
+    connectToDatabase().then(async (db) => {
+        const collection = db.collection('waitlist');
 
-    // Add header if file doesn't exist
-    if (!fs.existsSync(filePath)) {
-        fs.writeFileSync(filePath, 'Phone,DateSubmitted\n', 'utf8');
-    }
-
-    fs.appendFile(filePath, csvLine, (err) => {
-        if (err) {
-            console.error('Failed to save to waitlist.csv:', err);
-            return res.status(500).json({ error: 'Server error' });
+        // Check if number already exists
+        const existing = await collection.findOne({ phone: sanitizedPhone });
+        if (existing) {
+            return res.json({ success: true, message: 'Already on waitlist' });
         }
+
+        await collection.insertOne({
+            phone: sanitizedPhone,
+            dateSubmitted: new Date().toISOString()
+        });
+
         res.json({ success: true, message: 'Saved to waitlist' });
+    }).catch(err => {
+        console.error('Failed to save to waitlist DB:', err);
+        return res.status(500).json({ error: 'Server error' });
     });
 });
 
@@ -59,10 +98,5 @@ app.options('/api/waitlist', (req, res) => {
 const webhookRoutes = require('./routes/webhook');
 app.use('/webhook', webhookRoutes);
 
-// Start background cleanup job for /tmp folder
-const cleanupService = require('./services/cleanup');
-cleanupService.startCleanupJob();
-
-app.listen(PORT, () => {
-    console.log(`Server is listening on port ${PORT}`);
-});
+// Export for Vercel
+module.exports = app;
