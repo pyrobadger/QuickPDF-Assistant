@@ -25,10 +25,13 @@
 
     <!-- Pre-load Dark Mode -->
     <script>
-        const savedTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-        if (savedTheme === 'dark') {
-            document.documentElement.setAttribute('data-theme', 'dark');
-        }
+        const getSystemTheme = () => window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        const applyTheme = (theme) => {
+            if (theme === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+            else document.documentElement.removeAttribute('data-theme');
+        };
+        const savedTheme = localStorage.getItem('theme');
+        applyTheme(savedTheme || getSystemTheme());
     </script>
 
     <style>
@@ -2478,23 +2481,36 @@
         const themeIcon = themeToggle.querySelector('i');
         const htmlElement = document.documentElement;
 
-        // Check and sync icon with initialized theme
-        if (htmlElement.getAttribute('data-theme') === 'dark') {
-            themeIcon.classList.replace('ph-moon', 'ph-sun');
-        }
+        const syncIcon = () => {
+            if (htmlElement.getAttribute('data-theme') === 'dark') {
+                themeIcon.className = 'ph-bold ph-sun';
+            } else {
+                themeIcon.className = 'ph-bold ph-moon';
+            }
+        };
+
+        // Initialize icon
+        syncIcon();
+
+        // Listen for system theme changes
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+            if (!localStorage.getItem('theme')) {
+                const newTheme = e.matches ? 'dark' : 'light';
+                if (newTheme === 'dark') htmlElement.setAttribute('data-theme', 'dark');
+                else htmlElement.removeAttribute('data-theme');
+                syncIcon();
+            }
+        });
 
         themeToggle.addEventListener('click', () => {
             const currentTheme = htmlElement.getAttribute('data-theme');
             const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
 
-            htmlElement.setAttribute('data-theme', newTheme);
+            if (newTheme === 'dark') htmlElement.setAttribute('data-theme', 'dark');
+            else htmlElement.removeAttribute('data-theme');
+            
             localStorage.setItem('theme', newTheme);
-
-            if (newTheme === 'dark') {
-                themeIcon.classList.replace('ph-moon', 'ph-sun');
-            } else {
-                themeIcon.classList.replace('ph-sun', 'ph-moon');
-            }
+            syncIcon();
         });
 
         // === Sticky nav shadow ===
