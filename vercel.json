@@ -1,11 +1,7 @@
 {
     "rewrites": [
         {
-            "source": "/api/(.*)",
-            "destination": "/index.js"
-        },
-        {
-            "source": "/webhook(.*)",
+            "source": "/api/waitlist",
             "destination": "/index.js"
         }
     ],
