@@ -8,5 +8,6 @@
             "source": "/webhook(.*)",
             "destination": "/index.js"
         }
-    ]
+    ],
+    "cleanUrls": true
 }
