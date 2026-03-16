@@ -18,8 +18,12 @@ export default async function handler(req, res) {
         }
     } else if (req.method === 'POST') {
         const body = req.body;
+        
+        console.log('--- INCOMING WEBHOOK ---');
+        console.log('HEADERS:', req.headers);
+        console.log('BODY:', JSON.stringify(body, null, 2));
 
-        if (body.object) {
+        if (body && body.object) {
             if (
                 body.entry &&
                 body.entry[0].changes &&
@@ -33,14 +37,18 @@ export default async function handler(req, res) {
 
                 console.log(`Received message from ${from}`);
 
-                // Process the message asynchronously
-                // We don't await because Vercel functions might timeout if pdf processing takes too long,
-                // but WhatsApp requires a 200 OK immediately.
-                botController.handleIncomingMessage(phoneNumberId, from, msg).catch(err => {
+                // Process the message fully before responding
+                // In serverless environments (like Vercel functions), the execution environment
+                // freezes/terminates immediately after res.send() is called.
+                // Thus, we must await the background process so it completes successfully.
+                try {
+                    await botController.handleIncomingMessage(phoneNumberId, from, msg);
+                    console.log(`Successfully processed message from ${from}`);
+                } catch (err) {
                     console.error('Background processing error:', err);
-                });
+                }
                 
-                // Acknowledge receipt immediately to Meta
+                // Acknowledge receipt to Meta
                 res.status(200).send('EVENT_RECEIVED');
             } else {
                 // Acknowledge other types of updates (statuses, etc.)
