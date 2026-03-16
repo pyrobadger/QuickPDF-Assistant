@@ -1,6 +1,6 @@
 const botController = require('../controllers/botController');
 
-export default async function handler(req, res) {
+module.exports = async function(req, res) {
     if (req.method === 'GET') {
         const mode = req.query['hub.mode'];
         const token = req.query['hub.verify_token'];
