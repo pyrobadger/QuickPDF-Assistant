@@ -217,7 +217,7 @@ class BotController {
             await whatsappService.sendTextMessage(from, 'Processing split... this may take a moment.');
             try {
                 const inputPath = session.files[0];
-                const outputPath = path.join(__dirname, '..', 'tmp', `${crypto.randomUUID()}_split.pdf`);
+                const outputPath = path.join('/tmp', `${crypto.randomUUID()}_split.pdf`);
                 await pdfWorker.splitPdf(inputPath, outputPath, range);
                 await this.sendResultAndCleanup(from, outputPath, 'application/pdf', 'document', 'Here is your split PDF.', session.metadata.originalName ? `${session.metadata.originalName}_split.pdf` : 'split.pdf');
             } catch (err) {
@@ -228,7 +228,7 @@ class BotController {
             await whatsappService.sendTextMessage(from, 'Securing your file... this may take a moment.');
             try {
                 const inputPath = session.files[0];
-                const outputPath = path.join(__dirname, '..', 'tmp', `${crypto.randomUUID()}_protected.pdf`);
+                const outputPath = path.join('/tmp', `${crypto.randomUUID()}_protected.pdf`);
                 await pdfWorker.protectPdf(inputPath, outputPath, text); // text is password
                 // Note: user password text is logged in WA but we don't save it
                 await this.sendResultAndCleanup(from, outputPath, 'application/pdf', 'document', 'Here is your protected PDF.', session.metadata.originalName ? `${session.metadata.originalName}_protected.pdf` : 'protected.pdf');
@@ -240,7 +240,7 @@ class BotController {
             await whatsappService.sendTextMessage(from, 'Unlocking your file... this may take a moment.');
             try {
                 const inputPath = session.files[0];
-                const outputPath = path.join(__dirname, '..', 'tmp', `${crypto.randomUUID()}_unlocked.pdf`);
+                const outputPath = path.join('/tmp', `${crypto.randomUUID()}_unlocked.pdf`);
                 await pdfWorker.unlockPdf(inputPath, outputPath, text);
                 await this.sendResultAndCleanup(from, outputPath, 'application/pdf', 'document', 'Here is your unlocked PDF.', session.metadata.originalName ? `${session.metadata.originalName}_unlocked.pdf` : 'unlocked.pdf');
             } catch (err) {
@@ -296,7 +296,7 @@ class BotController {
             else if (document.mime_type === 'application/vnd.openxmlformats-officedocument.presentationml.presentation') ext = '.pptx';
             else if (document.mime_type === 'application/vnd.ms-powerpoint') ext = '.ppt';
 
-            const localPath = path.join(__dirname, '..', 'tmp', `${crypto.randomUUID()}${ext}`);
+            const localPath = path.join('/tmp', `${crypto.randomUUID()}${ext}`);
             await whatsappService.downloadMedia(mediaUrl, localPath);
 
             // Because WhatsApp might send multiple webhooks concurrently, fetch the freshest session state
@@ -363,7 +363,7 @@ class BotController {
     async processMerge(from, session) {
         await whatsappService.sendTextMessage(from, 'Merging your files... this may take a moment.');
         try {
-            const outputPath = path.join(__dirname, '..', 'tmp', `${crypto.randomUUID()}_merged.pdf`);
+            const outputPath = path.join('/tmp', `${crypto.randomUUID()}_merged.pdf`);
             await pdfWorker.mergePdfs(session.files, outputPath);
             await this.sendResultAndCleanup(from, outputPath, 'application/pdf', 'document', 'Here is your merged PDF.', 'merged.pdf');
         } catch (error) {
@@ -377,7 +377,7 @@ class BotController {
         await whatsappService.sendTextMessage(from, 'Compressing your file... this may take a moment.');
         try {
             const inputPath = session.files[0];
-            const outputPath = path.join(__dirname, '..', 'tmp', `${crypto.randomUUID()}_compressed.pdf`);
+            const outputPath = path.join('/tmp', `${crypto.randomUUID()}_compressed.pdf`);
 
             // Map our sizes to Ghostscript PDFSETTINGS
             let gsLevel = 'ebook'; // medium
@@ -408,7 +408,7 @@ class BotController {
 
             if (type === 'convert_pdf_to_jpg') {
                 // Returns directory path containing the converted JPEGs
-                const outputDir = path.join(__dirname, '..', 'tmp', crypto.randomUUID());
+                const outputDir = path.join('/tmp', crypto.randomUUID());
                 await fs.mkdir(outputDir);
 
                 try {
@@ -462,15 +462,15 @@ class BotController {
                     throw pdfErr; // Re-throw to be caught by the general block
                 }
             } else if (type === 'convert_docx_to_pdf' || type === 'convert_pptx_to_pdf') {
-                const outputDir = path.join(__dirname, '..', 'tmp');
+                const outputDir = path.join('/tmp');
                 const outputPath = await pdfWorker.convertDocxToPdf(inputPath, outputDir);
                 await this.sendResultAndCleanup(from, outputPath, 'application/pdf', 'document', 'Here is your converted PDF.', session.metadata.originalName ? `${session.metadata.originalName}.pdf` : 'converted.pdf');
             } else if (type === 'convert_pdf_to_docx') {
-                const outputDir = path.join(__dirname, '..', 'tmp');
+                const outputDir = path.join('/tmp');
                 const outputPath = await pdfWorker.convertPdfToDocx(inputPath, outputDir);
                 await this.sendResultAndCleanup(from, outputPath, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'document', 'Here is your converted Word document.', session.metadata.originalName ? `${session.metadata.originalName}.docx` : 'converted.docx');
             } else if (type === 'convert_images_to_pdf') {
-                const outputPath = path.join(__dirname, '..', 'tmp', `${crypto.randomUUID()}_images_converted.pdf`);
+                const outputPath = path.join('/tmp', `${crypto.randomUUID()}_images_converted.pdf`);
                 await pdfWorker.convertImagesToPdf(session.files, outputPath);
                 await this.sendResultAndCleanup(from, outputPath, 'application/pdf', 'document', 'Here is your merged image PDF.', 'images.pdf');
             }
