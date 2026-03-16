@@ -15,15 +15,15 @@
     <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png" />
     <meta name="apple-mobile-web-app-title" content="MyWebSite" />
     <link rel="manifest" href="site.webmanifest" />
-    <!-- Google Fonts -->
+    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-    <!-- Phosphor Icons -->
+    
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
 
-    <!-- Pre-load Dark Mode -->
+    
     <script>
         const getSystemTheme = () => window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
         const applyTheme = (theme) => {
@@ -35,7 +35,7 @@
     </script>
 
     <style>
-        /* ===== RESET & BASE ===== */
+        
         *,
         *::before,
         *::after {
@@ -225,7 +225,7 @@
             max-width: 100%;
         }
 
-        /* ===== ANNOUNCEMENT BAR ===== */
+        
         .announcement-bar {
             background: var(--color-accent);
             color: #fff;
@@ -273,7 +273,7 @@
             }
         }
 
-        /* ===== NAVIGATION ===== */
+        
         .nav-wrapper {
             position: sticky;
             top: 0;
@@ -390,7 +390,7 @@
             -webkit-tap-highlight-color: transparent;
         }
 
-        /* ===== MOBILE MENU OVERLAY ===== */
+        
         .mobile-menu {
             display: none;
             position: fixed;
@@ -491,7 +491,7 @@
             text-align: center;
         }
 
-        /* ===== HERO CAPSULE BADGE ===== */
+        
         .hero-capsule {
             display: inline-flex;
             align-items: center;
@@ -521,7 +521,7 @@
             color: var(--color-text);
         }
 
-        /* ===== HERO ===== */
+        
         .hero {
             position: relative;
             padding: 100px 32px 80px;
@@ -625,7 +625,7 @@
             border-color: #cbd5e1;
         }
 
-        /* ===== HERO VIDEO SHOWCASE ===== */
+        
         .hero-showcase {
             position: relative;
             z-index: 1;
@@ -652,11 +652,11 @@
             display: block;
             border-radius: 20px;
             transform: scale(1.03);
-            /* Zooms in slightly to crop out the baked-in black borders */
+            
         }
 
 
-        /* ===== TRUST BAR ===== */
+        
         .trust-bar {
             position: relative;
             z-index: 1;
@@ -726,7 +726,7 @@
             }
         }
 
-        /* ===== FEATURES SECTION (TABBED) ===== */
+        
         .features-section {
             padding: 120px 32px;
             background: var(--color-bg);
@@ -756,7 +756,7 @@
             line-height: 1.7;
         }
 
-        /* Tabs */
+        
         .tabs-wrapper {
             max-width: 1100px;
             margin: 0 auto;
@@ -808,7 +808,7 @@
             font-size: 16px;
         }
 
-        /* Tab Content */
+        
         .tab-panel {
             display: none;
             animation: fadeInTab 0.4s ease;
@@ -910,7 +910,7 @@
             gap: 8px;
         }
 
-        /* Stats Row */
+        
         .stats-row {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -944,7 +944,7 @@
         }
 
 
-        /* ===== COMPARISON SECTION ===== */
+        
         .comparison-section {
             padding: 120px 32px;
             background: var(--color-bg);
@@ -1071,7 +1071,7 @@
             }
         }
 
-        /* ===== BOTTOM CTA ===== */
+        
         .cta-section {
             padding: 120px 32px;
             background: var(--color-bg);
@@ -1123,7 +1123,7 @@
             padding: 16px 40px;
         }
 
-        /* ===== FLOATING CTA BAR ===== */
+        
         .floating-cta {
             position: fixed;
             bottom: 24px;
@@ -1175,7 +1175,7 @@
             color: #fff;
         }
 
-        /* ===== FOOTER ===== */
+        
         .footer {
             background: var(--color-surface);
             border-top: 1px solid var(--color-border);
@@ -1224,7 +1224,7 @@
             color: var(--color-text-muted);
         }
 
-        /* ===== SCROLL ANIMATIONS ===== */
+        
         .reveal {
             opacity: 0;
             transform: translateY(32px);
@@ -1237,7 +1237,7 @@
         }
 
 
-        /* ===== PRICING SECTION ===== */
+        
         .pricing-section {
             padding: 120px 32px;
             background: var(--color-bg);
@@ -1267,7 +1267,7 @@
             line-height: 1.7;
         }
 
-        /* Billing Toggle */
+        
         .billing-toggle {
             display: flex;
             align-items: center;
@@ -1329,7 +1329,7 @@
             border-radius: var(--radius-full);
         }
 
-        /* Pricing Cards */
+        
         .pricing-grid {
             max-width: 820px;
             margin: 0 auto;
@@ -1508,9 +1508,9 @@
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
         }
 
-        /* pricing-grid mobile handled in main responsive block above */
+        
 
-        /* ===== WAITLIST SECTION ===== */
+        
         .waitlist-section {
             padding: 80px 32px 100px;
             background: var(--color-bg);
@@ -1678,7 +1678,7 @@
             }
         }
 
-        /* ===== RESPONSIVE — TABLET (≤1024px) ===== */
+        
         @media (max-width: 1024px) {
             .nav {
                 padding: 0 24px;
@@ -1697,10 +1697,10 @@
             }
         }
 
-        /* ===== RESPONSIVE — MOBILE (≤768px) ===== */
+        
         @media (max-width: 768px) {
 
-            /* --- Navigation --- */
+            
             .nav-links {
                 display: none;
             }
@@ -1726,7 +1726,7 @@
                 font-size: 18px;
             }
 
-            /* --- Announcement Bar --- */
+            
             .announcement-bar {
                 padding: 8px 16px;
                 font-size: 12px;
@@ -1738,7 +1738,7 @@
                 font-size: 12px;
             }
 
-            /* --- Hero --- */
+            
             .hero {
                 padding: 48px 20px 32px;
             }
@@ -1767,7 +1767,7 @@
                 padding: 14px 24px;
             }
 
-            /* --- Showcase Cards --- */
+            
             .hero-showcase {
                 margin-top: 40px;
             }
@@ -1805,7 +1805,7 @@
                 font-size: 12px;
             }
 
-            /* --- Features Section --- */
+            
             .features-section {
                 padding: 64px 16px;
             }
@@ -1873,7 +1873,7 @@
                 font-size: 28px;
             }
 
-            /* --- Pricing --- */
+            
             .pricing-section {
                 padding: 64px 16px;
             }
@@ -1902,7 +1902,7 @@
                 font-size: 20px;
             }
 
-            /* --- CTA Section --- */
+            
             .cta-section {
                 padding: 64px 16px;
             }
@@ -1928,7 +1928,7 @@
                 padding: 14px 28px;
             }
 
-            /* --- Floating CTA --- */
+            
             .floating-cta {
                 bottom: 16px;
                 left: 16px;
@@ -1954,7 +1954,7 @@
                 font-size: 12px;
             }
 
-            /* --- Footer --- */
+            
             .footer {
                 padding: 40px 24px;
                 display: block;
@@ -1974,13 +1974,13 @@
                 justify-content: center;
             }
 
-            /* --- Scroll reveal - reduce travel on mobile --- */
+            
             .reveal {
                 transform: translateY(20px);
             }
         }
 
-        /* ===== RESPONSIVE — SMALL MOBILE (≤480px) ===== */
+        
         @media (max-width: 480px) {
             .hero {
                 padding: 36px 16px 24px;
@@ -2056,7 +2056,7 @@
 </head>
 
 <body>
-    <!-- Navigation -->
+    
     <nav class="nav-wrapper" id="nav">
         <div class="nav">
             <a href="#" class="nav-logo">QuickPDF<span>Assistant</span></a>
@@ -2077,7 +2077,7 @@
         </div>
     </nav>
 
-    <!-- Mobile Menu Overlay -->
+    
     <div class="mobile-menu" id="mobile-menu">
         <div class="mobile-menu-backdrop" id="mobile-menu-backdrop"></div>
         <div class="mobile-menu-panel">
@@ -2099,7 +2099,7 @@
         </div>
     </div>
 
-    <!-- Hero -->
+    
     <section class="hero" id="hero">
         <div class="hero-gradient"></div>
         <div class="hero-content reveal">
@@ -2124,12 +2124,12 @@
             </div>
         </div>
 
-        <!-- Trust Bar -->
+        
         <div class="trust-bar reveal">
             <p class="trust-bar-label">Why people <strong>love it</strong></p>
             <div class="trust-ticker-wrapper">
                 <div class="trust-ticker">
-                    <!-- Set 1 -->
+                    
                     <span class="trust-tag">Works right in WhatsApp</span>
                     <span class="trust-dot">&middot;</span>
                     <span class="trust-tag">No app to install</span>
@@ -2150,7 +2150,7 @@
                     <span class="trust-dot">&middot;</span>
                     <span class="trust-tag">100% private</span>
                     <span class="trust-dot">&middot;</span>
-                    <!-- Set 2 (duplicate for seamless loop) -->
+                    
                     <span class="trust-tag">Works right in WhatsApp</span>
                     <span class="trust-dot">&middot;</span>
                     <span class="trust-tag">No app to install</span>
@@ -2175,7 +2175,7 @@
             </div>
         </div>
 
-        <!-- Product Video Showcase -->
+        
         <div class="hero-showcase reveal">
             <div class="video-wrapper">
                 <video autoplay muted loop playsinline>
@@ -2185,7 +2185,7 @@
         </div>
     </section>
 
-    <!-- Features Section (Tabbed) -->
+    
     <section class="features-section" id="features">
         <div class="features-header reveal">
             <h2>
@@ -2211,7 +2211,7 @@
                 </button>
             </div>
 
-            <!-- Merge & Split -->
+            
             <div class="tab-panel active" id="tab-merge">
                 <div class="feature-layout">
                     <div class="feature-card">
@@ -2226,7 +2226,7 @@
                 </div>
             </div>
 
-            <!-- Compress -->
+            
             <div class="tab-panel" id="tab-compress">
                 <div class="feature-layout">
                     <div class="feature-card">
@@ -2241,7 +2241,7 @@
                 </div>
             </div>
 
-            <!-- Convert -->
+            
             <div class="tab-panel" id="tab-convert">
                 <div class="feature-layout">
                     <div class="feature-card">
@@ -2256,7 +2256,7 @@
                 </div>
             </div>
 
-            <!-- Protect -->
+            
             <div class="tab-panel" id="tab-protect">
                 <div class="feature-layout">
                     <div class="feature-card">
@@ -2274,7 +2274,7 @@
     </section>
 
 
-    <!-- Comparison Section -->
+    
     <section class="comparison-section" id="comparison">
         <div class="comparison-header reveal">
             <h2>Why not just use <span class="muted">a PDF website?</span></h2>
@@ -2282,7 +2282,7 @@
                 different.</p>
         </div>
         <div class="comparison-grid reveal">
-            <!-- Old Way -->
+            
             <div class="comparison-card old">
                 <div class="comparison-card-title">
                     <i class="ph-duotone ph-globe"></i>
@@ -2316,7 +2316,7 @@
                 </ul>
             </div>
 
-            <!-- QuickPDF -->
+            
             <div class="comparison-card highlight">
                 <div class="comparison-card-badge">Recommended</div>
                 <div class="comparison-card-title">
@@ -2353,7 +2353,7 @@
         </div>
     </section>
 
-    <!-- Pricing Section -->
+    
     <section class="pricing-section" id="pricing">
         <div class="pricing-header reveal">
             <h2>Simple, honest <span class="muted">pricing.</span></h2>
@@ -2368,7 +2368,7 @@
         </div>
 
         <div class="pricing-grid reveal">
-            <!-- Free Tier -->
+            
             <div class="pricing-card">
                 <div class="pricing-tier">Free forever</div>
                 <div class="pricing-name">Freemium</div>
@@ -2392,7 +2392,7 @@
                 </a>
             </div>
 
-            <!-- Pro Tier -->
+            
             <div class="pricing-card featured">
                 <div class="popular-badge">Most Popular</div>
                 <div class="pricing-tier">For power users</div>
@@ -2422,7 +2422,7 @@
         </div>
     </section>
 
-    <!-- Waitlist / Early Access Section -->
+    
     <section class="waitlist-section" id="waitlist">
         <div class="waitlist-card reveal">
             <div class="waitlist-badge">
@@ -2452,7 +2452,7 @@
         </div>
     </section>
 
-    <!-- Floating CTA -->
+    
     <div class="floating-cta" id="floating-cta">
         <span>QuickPDF is launching soon</span>
         <a href="#waitlist" class="floating-cta-btn">
@@ -2461,7 +2461,7 @@
         <a href="#features" class="floating-cta-link">Explore features</a>
     </div>
 
-    <!-- Footer -->
+    
     <footer class="footer">
         <div class="footer-inner">
             <div class="footer-logo">QuickPDF<span>Assistant</span></div>
@@ -2474,7 +2474,7 @@
         </div>
     </footer>
 
-    <!-- Scripts -->
+    
     <script>
         // === Theme Toggle ===
         const themeToggle = document.getElementById('theme-toggle');

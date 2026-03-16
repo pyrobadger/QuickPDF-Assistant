@@ -8,6 +8,11 @@ router.get('/', (req, res) => {
     const mode = req.query['hub.mode'];
     const token = req.query['hub.verify_token'];
     const challenge = req.query['hub.challenge'];
+    //temp
+    console.log('MODE:', mode);
+    console.log('TOKEN RECEIVED:', token);
+    console.log('ENV TOKEN:', process.env.VERIFY_TOKEN);
+    console.log('MATCH:', token === process.env.VERIFY_TOKEN);
 
     if (mode && token) {
         if (mode === 'subscribe' && token === process.env.VERIFY_TOKEN) {
