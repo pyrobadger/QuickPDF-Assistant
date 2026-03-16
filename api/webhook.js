@@ -24,16 +24,12 @@ module.exports = async function(req, res) {
         console.log('BODY:', JSON.stringify(body, null, 2));
 
         if (body && body.object) {
-            if (
-                body.entry &&
-                body.entry[0].changes &&
-                body.entry[0].changes[0] &&
-                body.entry[0].changes[0].value.messages &&
-                body.entry[0].changes[0].value.messages[0]
-            ) {
-                const phoneNumberId = body.entry[0].changes[0].value.metadata.phone_number_id;
-                const from = body.entry[0].changes[0].value.messages[0].from;
-                const msg = body.entry[0].changes[0].value.messages[0];
+            const message = body.entry?.[0]?.changes?.[0]?.value?.messages?.[0];
+
+            if (message) {
+                const phoneNumberId = body.entry?.[0]?.changes?.[0]?.value?.metadata?.phone_number_id;
+                const from = message.from;
+                const msg = message;
 
                 console.log(`Received message from ${from}`);
 
