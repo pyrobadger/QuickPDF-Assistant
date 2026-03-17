@@ -148,6 +148,10 @@
             background: var(--color-border);
         }
 
+        [data-theme="dark"] .toggle-switch.yearly {
+            background: var(--color-coral);
+        }
+
         [data-theme="dark"] .save-badge {
             background: rgba(240, 101, 67, 0.15);
         }
@@ -767,7 +771,7 @@
             align-items: center;
             justify-content: center;
             gap: 4px;
-            margin-bottom: 48px;
+            margin-bottom: 80px;
             background: var(--color-surface);
             border: 1px solid var(--color-border);
             border-radius: var(--radius-full);
@@ -831,8 +835,36 @@
         }
 
         .feature-layout {
-            max-width: 520px;
+            display: flex;
+            align-items: center;
+            gap: 64px;
+            max-width: 1200px;
             margin: 0 auto;
+        }
+
+        .feature-layout > .feature-card {
+            flex: 0 0 380px; /* Reduced card width slightly to give more room to video */
+            width: 100%;
+        }
+
+        .feature-layout > .video-wrapper {
+            flex: 1; /* Video takes remaining space */
+            width: 100%;
+        }
+
+        @media (max-width: 960px) { /* Increased breakpoint for earlier wrapping */
+            .feature-layout {
+                flex-direction: column;
+                max-width: 600px;
+                gap: 32px;
+            }
+            .feature-layout > .feature-card {
+                flex: 1 1 auto;
+                order: 1; /* Ensure card is above video */
+            }
+             .feature-layout > .video-wrapper {
+                order: 2; /* Ensure video is below card */
+            }
         }
 
         .feature-card {
@@ -1327,6 +1359,17 @@
             background: #fff5f3;
             padding: 4px 10px;
             border-radius: var(--radius-full);
+            transition: all 0.3s ease;
+        }
+
+        .toggle-switch.yearly ~ .save-badge {
+            background: var(--color-coral);
+            color: #fff;
+        }
+
+        [data-theme="dark"] .toggle-switch.yearly ~ .save-badge {
+            background: var(--color-coral);
+            color: #fff;
         }
 
         
@@ -2179,7 +2222,7 @@
         <div class="hero-showcase reveal">
             <div class="video-wrapper">
                 <video autoplay muted loop playsinline>
-                    <source src="demo_new.mp4" type="video/mp4">
+                    <source src="split-demo.mp4" type="video/mp4">
                 </video>
             </div>
         </div>
@@ -2223,6 +2266,11 @@
                             Just send your files, tell the bot what you want, and you're done.</p>
                         <a href="#waitlist" class="cta-link">Try it out <i class="ph-bold ph-arrow-up-right"></i></a>
                     </div>
+                    <div class="video-wrapper">
+                        <video autoplay muted loop playsinline>
+                            <source src="merge-demo.mp4" type="video/mp4">
+                        </video>
+                    </div>
                 </div>
             </div>
 
@@ -2237,6 +2285,11 @@
                         <p>Shrink your file sizes to fit email limits while keeping things looking great. Perfect for
                             homework, invoices, resumes, or any document you need to send quickly.</p>
                         <a href="#waitlist" class="cta-link">Try it out <i class="ph-bold ph-arrow-up-right"></i></a>
+                    </div>
+                    <div class="video-wrapper">
+                        <video autoplay muted loop playsinline>
+                            <source src="compress-demo.mp4" type="video/mp4">
+                        </video>
                     </div>
                 </div>
             </div>
@@ -2253,6 +2306,11 @@
                             convert PDFs back to images or Word files when you need to.</p>
                         <a href="#waitlist" class="cta-link">Try it out <i class="ph-bold ph-arrow-up-right"></i></a>
                     </div>
+                    <div class="video-wrapper">
+                        <video autoplay muted loop playsinline>
+                            <source src="demo.mp4" type="video/mp4">
+                        </video>
+                    </div>
                 </div>
             </div>
 
@@ -2267,6 +2325,11 @@
                         <p>Lock your PDFs with a password before sharing, or unlock protected files when you need
                             access. All files are auto-deleted right after you get your result—nothing is kept.</p>
                         <a href="#waitlist" class="cta-link">Try it out <i class="ph-bold ph-arrow-up-right"></i></a>
+                    </div>
+                    <div class="video-wrapper">
+                        <video autoplay muted loop playsinline>
+                            <source src="protect-demo.mp4" type="video/mp4">
+                        </video>
                     </div>
                 </div>
             </div>
