@@ -7,25 +7,15 @@ const PORT = process.env.PORT || 3000;
 // Middleware to parse JSON
 app.use(express.json());
 
-const { MongoClient } = require('mongodb');
+const database = require('./services/database');
 //const fs = require('fs'); 
 const path = require('path');
-
-let cachedDb = null;
-
-async function connectToDatabase() {
-    if (cachedDb) return cachedDb;
-    const client = new MongoClient(process.env.MONGODB_URI);
-    await client.connect();
-    cachedDb = client.db('quickpdf');
-    return cachedDb;
-}
 
 // Serve static assets from public folder
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Waitlist POST route
-app.post('/api/waitlist', (req, res) => {
+app.post('/api/waitlist', async (req, res) => {
     // Allow CORS for local testing if needed
     res.header('Access-Control-Allow-Origin', '*');
     res.header('Access-Control-Allow-Headers', 'Content-Type');
@@ -39,25 +29,17 @@ app.post('/api/waitlist', (req, res) => {
         return res.status(400).json({ error: 'Invalid phone number. Must be exactly 10 digits.' });
     }
 
-    connectToDatabase().then(async (db) => {
-        const collection = db.collection('waitlist');
-
-        // Check if number already exists
-        const existing = await collection.findOne({ phone: sanitizedPhone });
-        if (existing) {
-            return res.json({ success: true, message: 'Already on waitlist' });
+    try {
+        const saved = await database.saveToWaitlist(sanitizedPhone);
+        if (saved) {
+            res.json({ success: true, message: 'Saved to waitlist' });
+        } else {
+            res.json({ success: true, message: 'Already on waitlist' });
         }
-
-        await collection.insertOne({
-            phone: sanitizedPhone,
-            dateSubmitted: new Date().toISOString()
-        });
-
-        res.json({ success: true, message: 'Saved to waitlist' });
-    }).catch(err => {
+    } catch (err) {
         console.error('Failed to save to waitlist DB:', err);
         return res.status(500).json({ error: 'Server error' });
-    });
+    }
 });
 
 // For CORS preflight (OPTIONS)
