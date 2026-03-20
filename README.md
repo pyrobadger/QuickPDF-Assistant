@@ -1,0 +1,83 @@
+# QuickPDF Assistant 🚀 
+### PDF Powerhouse on WhatsApp
+
+QuickPDF Assistant is a specialized WhatsApp bot designed to handle complex PDF tasks like merging, splitting, compressing, and converting files—all without leaving your WhatsApp chat. No extra apps, no extensions, and no browser-hopping required.
+
+---
+
+## ✨ Features
+
+- **📂 Merge PDFs**: Combine multiple PDF files into one in seconds. 
+- **✂️ Split PDFs**: Extract specific pages or split larger documents into smaller ones.
+- **📉 Compress PDFs**: Reduce file sizes significantly while maintaining quality.
+- **🖼️ Convert Images to PDF**: Turn your photos, screenshots, and scans into a single, professional PDF.
+- **🔄 Convert PDFs to Images**: Extract pages from your PDF as high-quality images.
+- **⚡ Fast & Secure**: Instant processing with a focus on user privacy.
+- **🔔 Live Waitlist**: Sign up to get early access to the power of QuickPDF.
+
+## 🛠️ Tech Stack
+
+- **Backend**: [Node.js](https://nodejs.org/) & [Express](https://expressjs.com/)
+- **Database**: [MongoDB](https://www.mongodb.com/) (Logging & Waitlist)
+- **PDF Core**: [pdf-lib](https://pdf-lib.js.org/)
+- **Image Processing**: [Sharp](https://sharp.pixelplumbing.com/)
+- **API Client**: [Axios](https://axios-http.com/)
+- **Deployment**: [Vercel](https://vercel.com/)
+
+## 📂 Project Structure
+
+- `index.js`: Main server entry point and API routes.
+- `api/`: Vercel serverless functions (for specific integrations).
+- `controllers/`: Core bot logic and processing handlers (`botController.js`).
+- `routes/`: Express routes for webhooks and API endpoints.
+- `services/`: Business logic, database connections, and helper scripts.
+- `public/`: Premium Landing Page with theme switching (Light/Dark mode).
+- `scripts/`: Utility scripts for maintenance and deployment.
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- [Node.js](https://nodejs.org/) (v16.x or later)
+- [MongoDB](https://www.mongodb.com/) (Atlas or local instance)
+- WhatsApp Business API credentials (via Meta Developer Portal)
+
+### Installation
+
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/pyrobadger/QuickPDF-Assistant.git
+   cd QuickPDF-Assistant
+   ```
+
+2. **Install dependencies**:
+   ```bash
+   npm install
+   ```
+
+3. **Configure Environment Variables**:
+   Create a `.env` file in the root directory and add:
+   ```env
+   MONGODB_URI=your_mongodb_connection_string
+   WHATSAPP_PHONE_NUMBER_ID=your_whatsapp_phone_number_id
+   WHATSAPP_ACCESS_TOKEN=your_whatsapp_access_token
+   WHATSAPP_VERIFY_TOKEN=your_verify_token
+   PORT=3000
+   ```
+
+4. **Run the application**:
+   ```bash
+   npm start
+   ```
+
+## 🌐 Deployment
+
+The project is optimized for **Vercel**. Simply connect your GitHub repository to Vercel and it will handle the environment variables and serverless function routing automatically based on the `vercel.json` configuration.
+
+## ⚖️ License
+
+Distributed under the ISC License. See `LICENSE` for more information.
+
+---
+
+Built with ❤️ by [pyrobadger](https://github.com/pyrobadger)
