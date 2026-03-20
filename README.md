@@ -1,7 +1,15 @@
-# QuickPDF Assistant 🚀 
+# QuickPDF Assistant 📄
 ### PDF Powerhouse on WhatsApp
 
 QuickPDF Assistant is a specialized WhatsApp bot designed to handle complex PDF tasks like merging, splitting, compressing, and converting files—all without leaving your WhatsApp chat. No extra apps, no extensions, and no browser-hopping required.
+
+---
+
+> [!TIP]
+> **QuickPDF Assistant is LIVE!** 🚀  
+> Anyone can use the bot for **FREE** right now.  
+> Check it out here: **[www.quickpdfassistant.in](https://www.quickpdfassistant.in)**
+> Or message us directly on WhatsApp: **[https://api.whatsapp.com/send/?phone=7021763298&text=Hi+%21&type=phone_number&app_absent=0](https://wa.me/7021763298/?text=Hi%20!)**
 
 ---
 
@@ -73,10 +81,6 @@ QuickPDF Assistant is a specialized WhatsApp bot designed to handle complex PDF 
 ## 🌐 Deployment
 
 The project is optimized for **Vercel**. Simply connect your GitHub repository to Vercel and it will handle the environment variables and serverless function routing automatically based on the `vercel.json` configuration.
-
-## ⚖️ License
-
-Distributed under the ISC License. See `LICENSE` for more information.
 
 ---
 
