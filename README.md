@@ -1,15 +1,15 @@
 # QuickPDF Assistant 📄
 ### PDF Powerhouse on WhatsApp
 
-QuickPDF Assistant is a specialized WhatsApp bot designed to handle complex PDF tasks like merging, splitting, compressing, and converting files—all without leaving your WhatsApp chat. No extra apps, no extensions, and no browser-hopping required.
+QuickPDF Assistant is a specialized WhatsApp bot designed to handle complex PDF tasks like merging, splitting, compressing, and converting files, all without leaving your WhatsApp chat. No extra apps, no extensions, and no browser hopping required.
 
 ---
 
 > [!TIP]
 > **QuickPDF Assistant is LIVE!** 🚀  
 > Anyone can use the bot for **FREE** right now.  
-> Check it out here: **[www.quickpdfassistant.in](https://www.quickpdfassistant.in)**
-> Or message us directly on WhatsApp: **[https://api.whatsapp.com/send/?phone=7021763298&text=Hi+%21&type=phone_number&app_absent=0](https://wa.me/7021763298/?text=Hi%20!)**
+> Check it out here: **[www.quickpdfassistant.in](https://www.quickpdfassistant.in)** 
+> or message us directly on **[Whatsapp](https://wa.me/7021763298/?text=Hi%20!)**
 
 ---
 
@@ -21,16 +21,16 @@ QuickPDF Assistant is a specialized WhatsApp bot designed to handle complex PDF 
 - **🖼️ Convert Images to PDF**: Turn your photos, screenshots, and scans into a single, professional PDF.
 - **🔄 Convert PDFs to Images**: Extract pages from your PDF as high-quality images.
 - **⚡ Fast & Secure**: Instant processing with a focus on user privacy.
-- **🔔 Live Waitlist**: Sign up to get early access to the power of QuickPDF.
 
 ## 🛠️ Tech Stack
 
 - **Backend**: [Node.js](https://nodejs.org/) & [Express](https://expressjs.com/)
 - **Database**: [MongoDB](https://www.mongodb.com/) (Logging & Waitlist)
 - **PDF Core**: [pdf-lib](https://pdf-lib.js.org/)
+- **Document Processing**: [libreOffice](https://www.libreoffice.org/)
 - **Image Processing**: [Sharp](https://sharp.pixelplumbing.com/)
 - **API Client**: [Axios](https://axios-http.com/)
-- **Deployment**: [Vercel](https://vercel.com/)
+- **Deployment**: [Vercel](https://vercel.com/) & [Digital Ocean](https://www.digitalocean.com/)
 
 ## 📂 Project Structure
 
@@ -40,7 +40,7 @@ QuickPDF Assistant is a specialized WhatsApp bot designed to handle complex PDF 
 - `routes/`: Express routes for webhooks and API endpoints.
 - `services/`: Business logic, database connections, and helper scripts.
 - `public/`: Premium Landing Page with theme switching (Light/Dark mode).
-- `scripts/`: Utility scripts for maintenance and deployment.
+- `tmp/`: Temporary folder for downloading files.
 
 ## 🚀 Getting Started
 
@@ -61,6 +61,7 @@ QuickPDF Assistant is a specialized WhatsApp bot designed to handle complex PDF 
 2. **Install dependencies**:
    ```bash
    npm install
+   sudo apt install libreoffice
    ```
 
 3. **Configure Environment Variables**:
@@ -80,7 +81,9 @@ QuickPDF Assistant is a specialized WhatsApp bot designed to handle complex PDF 
 
 ## 🌐 Deployment
 
-The project is optimized for **Vercel**. Simply connect your GitHub repository to Vercel and it will handle the environment variables and serverless function routing automatically based on the `vercel.json` configuration.
+The project's frontend is optimized for **Vercel**. Simply connect your GitHub repository to Vercel, and it will handle the environment variables and serverless function routing automatically based on the `vercel.json` configuration. If not, add the environment variables manually inside the projects instead of globally.
+
+The project's backend is deployed on **Digital Ocean**. Create a droplet, install required dependencies, and clone the repo. Host the backend using pm2, configure the networking accordingly.
 
 ---
 
