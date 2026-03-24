@@ -9,7 +9,7 @@ QuickPDF Assistant is a specialized WhatsApp bot designed to handle complex PDF 
 > **QuickPDF Assistant is LIVE!** 🚀  
 > Anyone can use the bot for **FREE** right now.  
 > Check it out here: **[www.quickpdfassistant.in](https://www.quickpdfassistant.in)**
-> Or message us directly on WhatsApp: **[https://api.whatsapp.com/send/?phone=7021763298&text=Hi+%21&type=phone_number&app_absent=0](https://wa.me/7021763298/?text=Hi%20!)**
+> Or message us directly on : **[WhatsApp](https://wa.me/7021763298/?text=Hi%20!)**
 
 ---
 
