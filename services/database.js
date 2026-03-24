@@ -1,48 +1,39 @@
-const { MongoClient } = require('mongodb');
+const { createClient } = require('@supabase/supabase-js');
 
-let cachedDb = null;
-
-async function connectToDatabase() {
-  if (cachedDb) return cachedDb;
-  const client = new MongoClient(process.env.MONGODB_URI);
-  await client.connect();
-  cachedDb = client.db('quickpdf');
-  return cachedDb;
-}
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_ANON_KEY
+);
 
 /**
- * Log a user interaction to MongoDB
+ * Log a user interaction to Supabase
  * @param {string} phone - User's phone number
  * @param {string} action - Action performed (e.g. merge, split)
  * @param {object} metadata - Any relevant extra info like file size, duration, etc.
  */
 async function logInteraction(phone, action, metadata = {}) {
   try {
-    const db = await connectToDatabase();
-    const collection = db.collection('interactions');
-    await collection.insertOne({
-      phone,
-      action,
-      ...metadata,
-      timestamp: new Date()
-    });
-    // Also save/update the user in a users collection to keep track of everyone
-    const usersCollection = db.collection('users');
-    await usersCollection.updateOne(
-      { phone },
-      { 
-        $set: { 
-          phone, 
-          lastActive: new Date() 
-        },
-        $setOnInsert: {
-          onboardedAt: new Date()
-        }
-      },
-      { upsert: true }
-    );
+    // Ensure user exists
+    await supabase
+      .from('users')
+      .upsert(
+        { phone, lastActive: new Date().toISOString() },
+        { onConflict: 'phone' }
+      );
+
+    // Log the interaction
+    const { error } = await supabase
+      .from('interactions')
+      .insert({
+        phone,
+        action,
+        timestamp: new Date().toISOString(),
+        ...metadata
+      });
+
+    if (error) throw error;
   } catch (error) {
-    console.error('Failed to log interaction to MongoDB:', error);
+    console.error('Failed to log interaction to Supabase:', error);
   }
 }
 
@@ -51,26 +42,26 @@ async function logInteraction(phone, action, metadata = {}) {
  * @param {string} phone 
  */
 async function saveToWaitlist(phone) {
-    try {
-        const db = await connectToDatabase();
-        const collection = db.collection('waitlist');
-        const existing = await collection.findOne({ phone });
-        if (!existing) {
-            await collection.insertOne({
-                phone,
-                dateSubmitted: new Date().toISOString()
-            });
-            return true;
-        }
+  try {
+    const { data, error } = await supabase
+      .from('waitlist')
+      .insert({ phone, dateSubmitted: new Date().toISOString() });
+
+    if (error) {
+      if (error.code === '23505') {
+        // Unique constraint violation - phone already exists
         return false;
-    } catch (err) {
-        console.error('Failed to save to waitlist DB:', err);
-        throw err;
+      }
+      throw error;
     }
+    return true;
+  } catch (err) {
+    console.error('Failed to save to waitlist:', err);
+    throw err;
+  }
 }
 
 module.exports = {
-  connectToDatabase,
   logInteraction,
   saveToWaitlist
 };
