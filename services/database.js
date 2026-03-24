@@ -17,19 +17,39 @@ async function logInteraction(phone, action, metadata = {}) {
     await supabase
       .from('users')
       .upsert(
-        { phone, lastActive: new Date().toISOString() },
+        { phone, lastactive: new Date().toISOString() },
         { onConflict: 'phone' }
       );
+
+    // Prepare interaction record
+    const record = {
+      phone,
+      action,
+      timestamp: new Date().toISOString(),
+    };
+
+    // Map the camelCase JS metadata to the all-lowercase Postgres columns
+    // and put unrecognized things into 'metadata' jsonb column
+    const schemaColumns = ['pagecount', 'filesizemb', 'mimetype', 'status'];
+    const jsonbData = {};
+
+    for (const [key, value] of Object.entries(metadata)) {
+      const lowerKey = key.toLowerCase();
+      if (schemaColumns.includes(lowerKey)) {
+        record[lowerKey] = value;
+      } else {
+        jsonbData[key] = value; // put into JSONB field
+      }
+    }
+
+    if (Object.keys(jsonbData).length > 0) {
+      record.metadata = jsonbData;
+    }
 
     // Log the interaction
     const { error } = await supabase
       .from('interactions')
-      .insert({
-        phone,
-        action,
-        timestamp: new Date().toISOString(),
-        ...metadata
-      });
+      .insert(record);
 
     if (error) throw error;
   } catch (error) {
@@ -45,7 +65,7 @@ async function saveToWaitlist(phone) {
   try {
     const { data, error } = await supabase
       .from('waitlist')
-      .insert({ phone, dateSubmitted: new Date().toISOString() });
+      .insert({ phone, datesubmitted: new Date().toISOString() });
 
     if (error) {
       if (error.code === '23505') {
