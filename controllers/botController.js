@@ -521,8 +521,10 @@ class BotController {
             const mediaId = await whatsappService.uploadMedia(filePath, type);
 
             const finalName = outputFilename || path.basename(filePath);
+            const watermarkedCaption = `${caption ? caption + '\n\n' : ''}✨ Processed by *QuickPDF Assistant* 📄\n🌐 www.quickpdfassistant.in`;
+            
             console.log(`Sending document ${mediaId} to ${to}`);
-            await whatsappService.sendDocumentId(to, mediaId, finalName, caption);
+            await whatsappService.sendDocumentId(to, mediaId, finalName, watermarkedCaption);
         } catch (error) {
             console.error('Error sending resulting document:', error);
             await whatsappService.sendTextMessage(to, '⚠️ Processed your request but failed to send the resulting file. 🛠️');
