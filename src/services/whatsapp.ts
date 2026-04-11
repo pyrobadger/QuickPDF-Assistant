@@ -1,6 +1,6 @@
-const axios = require('axios');
-const fs = require('fs');
-const FormData = require('form-data');
+import axios from 'axios';
+import fs from 'fs';
+import FormData from 'form-data';
 
 // Base URL for WhatsApp API
 const BASE_URL = 'https://graph.facebook.com/v18.0/';
@@ -12,7 +12,7 @@ const getHeaders = () => ({
 
 class WhatsAppService {
 
-    async sendTextMessage(to, text) {
+    async sendTextMessage(to: string, text: string) {
         try {
             await axios({
                 method: 'POST',
@@ -24,12 +24,12 @@ class WhatsAppService {
                 },
                 headers: getHeaders()
             });
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to send text message:', error.response ? error.response.data : error.message);
         }
     }
 
-    async sendListMessage(to, bodyText, buttonText, sections, title = 'Menu') {
+    async sendListMessage(to: string, bodyText: string, buttonText: string, sections: any[], title = 'Menu') {
         try {
             await axios({
                 method: 'POST',
@@ -55,12 +55,12 @@ class WhatsAppService {
                 },
                 headers: getHeaders()
             });
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to send list message:', error.response ? error.response.data : error.message);
         }
     }
 
-    async sendReplyButtons(to, bodyText, buttons) {
+    async sendReplyButtons(to: string, bodyText: string, buttons: any[]) {
         try {
             const actionButtons = buttons.map(btn => ({
                 type: 'reply',
@@ -89,12 +89,12 @@ class WhatsAppService {
                 },
                 headers: getHeaders()
             });
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to send reply buttons:', error.response ? error.response.data : error.message);
         }
     }
 
-    async getMediaUrl(mediaId) {
+    async getMediaUrl(mediaId: string): Promise<string> {
         try {
             const response = await axios.get(`${BASE_URL}${mediaId}`, {
                 headers: {
@@ -102,13 +102,13 @@ class WhatsAppService {
                 }
             });
             return response.data.url;
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to get media URL:', error.response ? error.response.data : error.message);
             throw error;
         }
     }
 
-    async downloadMedia(url, destinationPath) {
+    async downloadMedia(url: string, destinationPath: string): Promise<string> {
         try {
             const response = await axios({
                 method: 'GET',
@@ -124,7 +124,7 @@ class WhatsAppService {
             return new Promise((resolve, reject) => {
                 const writer = fs.createWriteStream(destinationPath);
                 response.data.pipe(writer);
-                let error = null;
+                let error: any = null;
                 writer.on('error', err => {
                     error = err;
                     console.error('File write error:', err);
@@ -136,13 +136,13 @@ class WhatsAppService {
                     if (!error) resolve(destinationPath);
                 });
             });
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to download media:', error.response ? error.response.data : error.message);
             throw error;
         }
     }
 
-    async uploadMedia(filePath, type = 'document') {
+    async uploadMedia(filePath: string, type = 'document'): Promise<string> {
         const formData = new FormData();
         formData.append('messaging_product', 'whatsapp');
         formData.append('file', fs.createReadStream(filePath));
@@ -156,13 +156,13 @@ class WhatsAppService {
                 }
             });
             return response.data.id;
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to upload media:', error.response ? error.response.data : error.message);
             throw error;
         }
     }
 
-    async sendDocumentId(to, mediaId, filename, caption = '') {
+    async sendDocumentId(to: string, mediaId: string, filename: string, caption = '') {
         try {
             await axios({
                 method: 'POST',
@@ -179,12 +179,12 @@ class WhatsAppService {
                 },
                 headers: getHeaders()
             });
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to send document:', error.response ? error.response.data : error.message);
         }
     }
 
-    async sendImageId(to, mediaId) {
+    async sendImageId(to: string, mediaId: string) {
         try {
             await axios({
                 method: 'POST',
@@ -199,10 +199,10 @@ class WhatsAppService {
                 },
                 headers: getHeaders()
             });
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to send image:', error.response ? error.response.data : error.message);
         }
     }
 }
 
-module.exports = new WhatsAppService();
+export default new WhatsAppService();

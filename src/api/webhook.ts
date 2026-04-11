@@ -1,6 +1,6 @@
-const botController = require('../controllers/botController');
+import botController from '../controllers/botController.js';
 
-module.exports = async function(req, res) {
+export default async function (req: any, res: any) {
     if (req.method === 'GET') {
         const mode = req.query['hub.mode'];
         const token = req.query['hub.verify_token'];
@@ -18,7 +18,7 @@ module.exports = async function(req, res) {
         }
     } else if (req.method === 'POST') {
         const body = req.body;
-        
+
         console.log('--- INCOMING WEBHOOK ---');
         console.log('HEADERS:', req.headers);
         console.log('BODY:', JSON.stringify(body, null, 2));
@@ -39,7 +39,7 @@ module.exports = async function(req, res) {
                 } catch (err) {
                     console.error('Background processing error:', err);
                 }
-                
+
                 // Acknowledge receipt to Meta
                 res.status(200).send('EVENT_RECEIVED');
             } else {

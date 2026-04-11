@@ -1,8 +1,8 @@
-const { createClient } = require('@supabase/supabase-js');
+import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_ANON_KEY
+  process.env.SUPABASE_URL!,
+  process.env.SUPABASE_ANON_KEY!
 );
 
 /**
@@ -11,7 +11,7 @@ const supabase = createClient(
  * @param {string} action - Action performed (e.g. merge, split)
  * @param {object} metadata - Any relevant extra info like file size, duration, etc.
  */
-async function logInteraction(phone, action, metadata = {}) {
+export async function logInteraction(phone: string, action: string, metadata: any = {}) {
   try {
     // Ensure user exists
     await supabase
@@ -22,7 +22,7 @@ async function logInteraction(phone, action, metadata = {}) {
       );
 
     // Prepare interaction record
-    const record = {
+    const record: any = {
       phone,
       action,
       timestamp: new Date().toISOString(),
@@ -31,7 +31,7 @@ async function logInteraction(phone, action, metadata = {}) {
     // Map the camelCase JS metadata to the all-lowercase Postgres columns
     // and put unrecognized things into 'metadata' jsonb column
     const schemaColumns = ['pagecount', 'filesizemb', 'mimetype', 'status'];
-    const jsonbData = {};
+    const jsonbData: any = {};
 
     for (const [key, value] of Object.entries(metadata)) {
       const lowerKey = key.toLowerCase();
@@ -61,7 +61,7 @@ async function logInteraction(phone, action, metadata = {}) {
  * Save user to waitlist
  * @param {string} phone 
  */
-async function saveToWaitlist(phone) {
+export async function saveToWaitlist(phone: string) {
   try {
     const { data, error } = await supabase
       .from('waitlist')
@@ -80,8 +80,3 @@ async function saveToWaitlist(phone) {
     throw err;
   }
 }
-
-module.exports = {
-  logInteraction,
-  saveToWaitlist
-};

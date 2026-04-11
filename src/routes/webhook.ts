@@ -1,6 +1,7 @@
-const express = require('express');
+import express from 'express';
+import botController from '../controllers/botController.js';
+
 const router = express.Router();
-const botController = require('../controllers/botController');
 
 // Webhook Verification (GET)
 // Required by Meta to verify the callback URL
@@ -58,4 +59,4 @@ router.post('/', async (req, res) => {
     }
 });
 
-module.exports = router;
+export default router;

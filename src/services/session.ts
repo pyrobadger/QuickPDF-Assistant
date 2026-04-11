@@ -1,4 +1,5 @@
-const NodeCache = require('node-cache');
+import NodeCache from 'node-cache';
+
 // Cache keys expire after 15 minutes (900 seconds) of inactivity
 const sessionCache = new NodeCache({ stdTTL: 900, checkperiod: 120 });
 // Daily limits cache (24 hours)
@@ -6,10 +7,17 @@ const dailyLimitCache = new NodeCache({ stdTTL: 86400, checkperiod: 3600 });
 // Long-lived cache for tracking seen users (30 days = 2592000 seconds)
 const seenUserCache = new NodeCache({ stdTTL: 2592000, checkperiod: 86400 });
 
+export interface AppSession {
+    action: string | null;
+    stage: string | null;
+    files: string[];
+    metadata: any;
+}
+
 class SessionService {
 
-    getSession(phoneNumber) {
-        let session = sessionCache.get(phoneNumber);
+    getSession(phoneNumber: string): AppSession {
+        let session = sessionCache.get<AppSession>(phoneNumber);
         if (!session) {
             session = {
                 action: null,
@@ -22,27 +30,27 @@ class SessionService {
         return session;
     }
 
-    updateSession(phoneNumber, data) {
+    updateSession(phoneNumber: string, data: AppSession) {
         sessionCache.set(phoneNumber, data);
     }
 
-    clearSession(phoneNumber) {
+    clearSession(phoneNumber: string) {
         sessionCache.del(phoneNumber);
     }
 
-    incrementDailyUsage(phoneNumber) {
-        let usage = dailyLimitCache.get(phoneNumber) || 0;
+    incrementDailyUsage(phoneNumber: string): number {
+        let usage = dailyLimitCache.get<number>(phoneNumber) || 0;
         usage += 1;
         dailyLimitCache.set(phoneNumber, usage);
         return usage;
     }
 
-    getDailyUsage(phoneNumber) {
-        return dailyLimitCache.get(phoneNumber) || 0;
+    getDailyUsage(phoneNumber: string): number {
+        return dailyLimitCache.get<number>(phoneNumber) || 0;
     }
 
-    isFirstTimeUser(phoneNumber) {
-        const hasSeen = seenUserCache.get(phoneNumber);
+    isFirstTimeUser(phoneNumber: string): boolean {
+        const hasSeen = seenUserCache.get<boolean>(phoneNumber);
         if (!hasSeen) {
             seenUserCache.set(phoneNumber, true);
             return true;
@@ -51,4 +59,4 @@ class SessionService {
     }
 }
 
-module.exports = new SessionService();
+export default new SessionService();

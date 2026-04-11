@@ -1,9 +1,9 @@
-const fs = require('fs').promises;
-const path = require('path');
-const { PDFDocument } = require('pdf-lib');
-const { exec } = require('child_process');
-const util = require('util');
-const sharp = require('sharp');
+import fs from 'fs/promises';
+import path from 'path';
+import { PDFDocument } from 'pdf-lib';
+import { exec } from 'child_process';
+import util from 'util';
+import sharp from 'sharp';
 const execPromise = util.promisify(exec);
 
 // Hardcoded Ghostscript Path based on User instruction
@@ -16,7 +16,7 @@ class PDFWorker {
     /**
      * Merge multiple PDF files into one.
      */
-    async mergePdfs(filePaths, outputPath) {
+    async mergePdfs(filePaths: string[], outputPath: string) {
         const mergedPdf = await PDFDocument.create();
         for (const filePath of filePaths) {
             const pdfBytes = await fs.readFile(filePath);
@@ -36,7 +36,7 @@ class PDFWorker {
      * Compress PDF using Ghostscript
      * level: screen (lowest size), ebook (medium), printer, prepress
      */
-    async compressPdf(inputPath, outputPath, level = 'ebook') {
+    async compressPdf(inputPath: string, outputPath: string, level = 'ebook') {
         const command = `${gsCommand} -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -dPDFSETTINGS=/${level} -dNOPAUSE -dQUIET -dBATCH -sOutputFile="${outputPath}" "${inputPath}"`;
         try {
             await execPromise(command, { timeout: 30000 });
@@ -51,7 +51,7 @@ class PDFWorker {
      * Split specific pages from a PDF.
      * range: '2-5' or '1,3,4' or 'ALL'
      */
-    async splitPdf(inputPath, outputPath, range) {
+    async splitPdf(inputPath: string, outputPath: string, range: string) {
         if (range.toUpperCase() === 'ALL') {
             // For simplify, ALL means copy the whole document. But usually split means something else.
             // We'll just copy it for now.
@@ -67,11 +67,13 @@ class PDFWorker {
         const newDoc = await PDFDocument.create();
 
         // Parse range (e.g. "2-5", or "1,2")
-        let pagesToInclude = new Set();
+        let pagesToInclude = new Set<number>();
         const parts = range.split(',');
         for (let part of parts) {
             if (part.includes('-')) {
-                let [start, end] = part.split('-').map(n => parseInt(n.trim(), 10));
+                let partsArr = part.split('-').map(n => parseInt(n.trim(), 10));
+                let start = partsArr[0] || 0;
+                let end = partsArr[1] || start;
                 for (let i = start; i <= end; i++) {
                     pagesToInclude.add(i - 1); // 0-indexed
                 }
@@ -96,7 +98,7 @@ class PDFWorker {
     /**
      * Convert Image to PDF
      */
-    async convertImageToPdf(inputPath, outputPath) {
+    async convertImageToPdf(inputPath: string, outputPath: string) {
         // We'll handle JPG/PNG and convert to a PDF with one page matching the image dimensions
         const pdfDoc = await PDFDocument.create();
         const imageBytes = await fs.readFile(inputPath);
@@ -128,7 +130,7 @@ class PDFWorker {
     /**
      * Convert Multiple Images to PDF
      */
-    async convertImagesToPdf(inputPaths, outputPath) {
+    async convertImagesToPdf(inputPaths: string[], outputPath: string) {
         if (!Array.isArray(inputPaths) || inputPaths.length === 0) {
             throw new Error('No input images provided.');
         }
@@ -167,7 +169,7 @@ class PDFWorker {
      * Convert PDF to Image (first page as representation or all pages)
      * For MVP, we will extract the first page as a JPG using Ghostscript
      */
-    async convertPdfToImage(inputPath, outputPatternDir) {
+    async convertPdfToImage(inputPath: string, outputPatternDir: string) {
         // First check page count
         const pdfBytes = await fs.readFile(inputPath);
         const pdfDoc = await PDFDocument.load(pdfBytes);
@@ -192,7 +194,7 @@ class PDFWorker {
     /**
      * Protect PDF with a password
      */
-    async protectPdf(inputPath, outputPath, password) {
+    async protectPdf(inputPath: string, outputPath: string, password: string) {
         // pdf-lib does NOT support encrypting PDFs directly as of typical usage.
         // We can use Ghostscript or qpdf to encrypt. For a WhatsApp bot, using Ghostscript:
         const command = `${gsCommand} -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -dNOPAUSE -dQUIET -dBATCH -sOwnerPassword="${password}" -sUserPassword="${password}" -sOutputFile="${outputPath}" "${inputPath}"`;
@@ -208,7 +210,7 @@ class PDFWorker {
     /**
      * Unlock PDF with a password
      */
-    async unlockPdf(inputPath, outputPath, password) {
+    async unlockPdf(inputPath: string, outputPath: string, password: string) {
         // Ghostscript can also decrypt if password is provided
         const command = `${gsCommand} -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -dNOPAUSE -dQUIET -dBATCH -sPDFPassword="${password}" -sOutputFile="${outputPath}" "${inputPath}"`;
         try {
@@ -222,7 +224,7 @@ class PDFWorker {
     /**
      * Convert DOCX to PDF using LibreOffice
      */
-    async convertDocxToPdf(inputPath, outputPatternDir) {
+    async convertDocxToPdf(inputPath: string, outputPatternDir: string) {
         const command = `"${loCommand}" --headless --convert-to pdf "${inputPath}" --outdir "${outputPatternDir}"`;
         try {
             await execPromise(command, { timeout: 30000 });
@@ -237,7 +239,7 @@ class PDFWorker {
     /**
      * Convert PDF to DOCX using LibreOffice (Experimental PDF Import)
      */
-    async convertPdfToDocx(inputPath, outputPatternDir) {
+    async convertPdfToDocx(inputPath: string, outputPatternDir: string) {
         const command = `"${loCommand}" --headless --infilter="writer_pdf_import" --convert-to docx "${inputPath}" --outdir "${outputPatternDir}"`;
         try {
             await execPromise(command, { timeout: 30000 });
@@ -252,7 +254,11 @@ class PDFWorker {
 
 // --- Global Concurrency Limiter (Max 3 Heavy Jobs) ---
 class Semaphore {
-    constructor(maxCount) {
+    maxCount: number;
+    activeCount: number;
+    waiters: ((value: unknown) => void)[];
+
+    constructor(maxCount: number) {
         this.maxCount = maxCount;
         this.activeCount = 0;
         this.waiters = [];
@@ -271,7 +277,7 @@ class Semaphore {
     release() {
         if (this.waiters.length > 0) {
             const resolve = this.waiters.shift();
-            resolve(true);
+            if (resolve) resolve(true);
         } else {
             this.activeCount--;
         }
@@ -280,7 +286,7 @@ class Semaphore {
 
 const globalLimit = new Semaphore(3);
 
-async function runWithLimit(task) {
+async function runWithLimit(task: () => Promise<any>) {
     await globalLimit.acquire();
     try {
         return await task();
@@ -293,10 +299,10 @@ const workerInstance = new PDFWorker();
 
 // Wrap all methods with the concurrency limit
 for (const key of Object.getOwnPropertyNames(PDFWorker.prototype)) {
-    if (key !== 'constructor' && typeof workerInstance[key] === 'function') {
-        const originalMethod = workerInstance[key].bind(workerInstance);
-        workerInstance[key] = (...args) => runWithLimit(() => originalMethod(...args));
+    if (key !== 'constructor' && typeof (workerInstance as any)[key] === 'function') {
+        const originalMethod = (workerInstance as any)[key].bind(workerInstance);
+        (workerInstance as any)[key] = (...args: any[]) => runWithLimit(() => originalMethod(...args));
     }
 }
 
-module.exports = workerInstance;
+export default workerInstance;

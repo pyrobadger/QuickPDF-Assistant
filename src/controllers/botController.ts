@@ -1,14 +1,14 @@
-const whatsappService = require('../services/whatsapp');
-const sessionService = require('../services/session');
-const pdfWorker = require('../services/pdfWorker');
-const database = require('../services/database');
-const path = require('path');
-const fs = require('fs').promises;
-const crypto = require('crypto');
+import whatsappService from '../services/whatsapp.js';
+import sessionService from '../services/session.js';
+import pdfWorker from '../services/pdfWorker.js';
+import * as database from '../services/database.js';
+import path from 'path';
+import fs from 'fs/promises';
+import crypto from 'crypto';
 
 class BotController {
 
-    async handleIncomingMessage(phoneNumberId, from, msg) {
+    async handleIncomingMessage(phoneNumberId: string, from: string, msg: any) {
         let session = sessionService.getSession(from);
 
         try {
@@ -65,7 +65,7 @@ class BotController {
         }
     }
 
-    async sendOnboardingMessage(to) {
+    async sendOnboardingMessage(to: string) {
         const welcomeMessage = "👋 Welcome to QuickPDF!\n\n" +
             "The easiest way to work with PDFs — right here on WhatsApp. No apps, no browser, no ads.\n\n" +
             "Just send any PDF or image and I'll help you:\n" +
@@ -78,7 +78,7 @@ class BotController {
         await whatsappService.sendTextMessage(to, welcomeMessage);
     }
 
-    async sendMainMenu(to) {
+    async sendMainMenu(to: string) {
         const bodyText = '📄 What would you like to do?';
         const buttonText = 'Options';
         const title = 'QuickPDF Menu';
@@ -105,7 +105,7 @@ class BotController {
         await whatsappService.sendListMessage(to, bodyText, buttonText, sections, title);
     }
 
-    async handleInteractiveSelection(from, actionId, session) {
+    async handleInteractiveSelection(from: string, actionId: string, session: any) {
         console.log(`User ${from} selected action: ${actionId}`);
         // Log menu selection
         await database.logInteraction(from, 'menu_selection', { selectedId: actionId });
@@ -214,7 +214,7 @@ class BotController {
         sessionService.updateSession(from, session);
     }
 
-    async handleTextState(from, text, session) {
+    async handleTextState(from: string, text: string, session: any) {
         if (session.stage === 'awaiting_split_range') {
             const range = text.toUpperCase();
             await whatsappService.sendTextMessage(from, '⚙️ Processing split... this may take a moment. ⏳');
@@ -256,7 +256,7 @@ class BotController {
         }
     }
 
-    async handleDocument(from, document, session, msgType) {
+    async handleDocument(from: string, document: any, session: any, msgType: string) {
         if (!session.action || session.stage === 'idle') {
             if (msgType === 'image') {
                 return; // Silently ignore race condition
@@ -280,11 +280,6 @@ class BotController {
             await whatsappService.sendTextMessage(from, '🚫 Unsupported file type. Please upload a PDF, Image, Word, or PowerPoint document. 📄🖼️');
             return;
         }
-
-        // Check file size (e.g. max 25MB)
-        const FILE_SIZE_LIMIT = 25 * 1024 * 1024;
-        // WhatsApp API doesn't always provide file size cleanly, but we can verify it upon download
-        // Assuming we download it:
 
         await whatsappService.sendTextMessage(from, '📥 Downloading your file... ⏳');
 
@@ -315,7 +310,7 @@ class BotController {
             const FILE_SIZE_LIMIT = isImage ? 10 * 1024 * 1024 : 40 * 1024 * 1024;
             const stats = await fs.stat(localPath);
             if (stats.size > FILE_SIZE_LIMIT) {
-                await fs.unlink(localPath).catch(() => {});
+                await fs.unlink(localPath).catch(() => { });
                 const limitMsg = isImage
                     ? '⚠️ File is too large! The freemium plan limits images to 10 MB. 📉'
                     : '⚠️ File is too large! The freemium plan limits documents to 40 MB. 📉';
@@ -328,7 +323,7 @@ class BotController {
             // Enforce max 20 images for a single conversion
             if (session.files.length > 20) {
                 // Remove the newly added file to keep session clean
-                await fs.unlink(localPath).catch(() => {});
+                await fs.unlink(localPath).catch(() => { });
                 await whatsappService.sendTextMessage(from, '🛑 You have reached the maximum of 20 images per PDF. Please finish or start a new conversion. 📁');
                 return;
             }
@@ -375,7 +370,7 @@ class BotController {
         }
     }
 
-    async processMerge(from, session) {
+    async processMerge(from: string, session: any) {
         await whatsappService.sendTextMessage(from, '🔗 Merging your files... this may take a moment. ⏳');
         try {
             const outputPath = path.join('/tmp', `${crypto.randomUUID()}_merged.pdf`);
@@ -388,7 +383,7 @@ class BotController {
         sessionService.clearSession(from);
     }
 
-    async processCompression(from, session) {
+    async processCompression(from: string, session: any) {
         await whatsappService.sendTextMessage(from, '🗜️ Compressing your file... this may take a moment. ⏳');
         try {
             const inputPath = session.files[0];
@@ -415,7 +410,7 @@ class BotController {
         sessionService.clearSession(from);
     }
 
-    async processConversion(from, session) {
+    async processConversion(from: string, session: any) {
         await whatsappService.sendTextMessage(from, '🔄 Converting your file... this may take a moment. ⏳');
         try {
             const inputPath = session.files[0];
@@ -433,31 +428,32 @@ class BotController {
                     const images = await fs.readdir(outputDir);
                     // Sort them logically (page-1.jpg, page-2.jpg etc)
                     images.sort((a, b) => {
-                        const numA = parseInt(a.match(/\d+/)[0]);
-                        const numB = parseInt(b.match(/\d+/)[0]);
+                        const numA = parseInt(a.match(/\d+/)?.[0] ?? '0', 10);
+                        const numB = parseInt(b.match(/\d+/)?.[0] ?? '0', 10);
                         return numA - numB;
                     });
 
                     if (images.length > 0) {
                         for (let i = 0; i < images.length; i++) {
-                            const imagePath = path.join(outputDir, images[i]);
+                            const imgName = images[i];
+                            if (!imgName) continue;
+                            const imagePath = path.join(outputDir, imgName);
                             // Use the underlying sendResultAndCleanup logic to send each file,
-                            // but pass no caption to avoid spam, and we manually clean up the dir later.
                             try {
                                 const mediaId = await whatsappService.uploadMedia(imagePath, 'image');
                                 await whatsappService.sendImageId(from, mediaId);
                             } catch (e) {
-                                console.error(`Failed to send ${images[i]}`, e);
+                                console.error(`Failed to send ${imgName}`, e);
                             }
                         }
 
                         // Send completion summary
                         await whatsappService.sendTextMessage(from, `✅ Done! ${images.length} pages sent! 🖼️`);
-                        
+
                         // Log PDF to JPG completion
-                        await database.logInteraction(from, session.action, { 
+                        await database.logInteraction(from, session.action, {
                             pageCount: images.length,
-                            status: 'success' 
+                            status: 'success'
                         });
 
                         // Cleanup the whole directory manually
@@ -472,11 +468,11 @@ class BotController {
                         throw new Error('No images generated');
                     }
                     sessionService.clearSession(from);
-                } catch (pdfErr) {
+                } catch (pdfErr: any) {
                     if (pdfErr.message && pdfErr.message.startsWith('MAX_PAGES_EXCEEDED')) {
                         const count = pdfErr.message.split(':')[1];
                         await whatsappService.sendTextMessage(from, `⚠️ This PDF has ${count} pages. PDF to JPG supports a maximum of 10 pages. 📄`);
-                        await fs.rmdir(outputDir, { recursive: true }).catch(() => { });
+                        await fs.rm(outputDir, { recursive: true, force: true }).catch(() => { });
                         sessionService.clearSession(from);
                         return; // Stop processing and avoid the generic error message
                     }
@@ -502,11 +498,11 @@ class BotController {
         sessionService.clearSession(from);
     }
 
-    async sendResultAndCleanup(to, filePath, mimeType, type = 'document', caption = '', outputFilename = null, action = 'unknown') {
+    async sendResultAndCleanup(to: string, filePath: string, mimeType: string, type = 'document', caption = '', outputFilename: string | null = null, action = 'unknown') {
         try {
             const stats = await fs.stat(filePath);
             const fileSizeMb = (stats.size / (1024 * 1024)).toFixed(2);
-            
+
             // Log the interaction
             await database.logInteraction(to, action, {
                 fileSizeMb: parseFloat(fileSizeMb),
@@ -522,7 +518,7 @@ class BotController {
 
             const finalName = outputFilename || path.basename(filePath);
             const watermarkedCaption = `${caption ? caption + '\n\n' : ''}✨ Processed by *QuickPDF Assistant* 📄\n🌐 www.quickpdfassistant.in`;
-            
+
             console.log(`Sending document ${mediaId} to ${to}`);
             await whatsappService.sendDocumentId(to, mediaId, finalName, watermarkedCaption);
         } catch (error) {
@@ -538,4 +534,4 @@ class BotController {
     }
 }
 
-module.exports = new BotController();
+export default new BotController();

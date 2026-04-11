@@ -1,5 +1,9 @@
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 class CleanupService {
     startCleanupJob(intervalMinutes = 15) {
@@ -13,7 +17,7 @@ class CleanupService {
     }
 
     cleanTmpDirectory() {
-        const tmpDir = path.join(__dirname, '..', 'tmp');
+        const tmpDir = path.join(__dirname, '..', '..', 'tmp');
         // Max age of a file in tmp before it gets deleted (15 mins)
         const MAX_AGE_MS = 15 * 60 * 1000;
 
@@ -46,4 +50,4 @@ class CleanupService {
     }
 }
 
-module.exports = new CleanupService();
+export default new CleanupService();
