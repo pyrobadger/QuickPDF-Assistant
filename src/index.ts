@@ -66,8 +66,8 @@ app.use('/webhook', webhookRoutes);
 // Export for Vercel
 export default app;
 
-const isMainModule = process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1];
-if (isMainModule) {
+// We don't want to call app.listen() if Vercel is importing it as a serverless function
+if (!process.env.VERCEL) {
     app.listen(PORT, () => {
         console.log(`Server running on port ${PORT}`);
     });
