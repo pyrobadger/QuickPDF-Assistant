@@ -201,7 +201,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // === Waitlist form ===
-    window.handleWaitlist = function(e) {
+    window.handleWaitlist = function (e) {
         e.preventDefault();
         const phone = document.getElementById('waitlist-phone').value;
         if (!phone) return;

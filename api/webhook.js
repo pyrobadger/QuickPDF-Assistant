@@ -33,10 +33,6 @@ module.exports = async function(req, res) {
 
                 console.log(`Received message from ${from}`);
 
-                // Process the message fully before responding
-                // In serverless environments (like Vercel functions), the execution environment
-                // freezes/terminates immediately after res.send() is called.
-                // Thus, we must await the background process so it completes successfully.
                 try {
                     await botController.handleIncomingMessage(phoneNumberId, from, msg);
                     console.log(`Successfully processed message from ${from}`);
