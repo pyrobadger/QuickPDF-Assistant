@@ -1,9 +1,18 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-const supabase = createClient(
-  process.env.SUPABASE_URL!,
-  process.env.SUPABASE_ANON_KEY!
-);
+let supabase: SupabaseClient | null = null;
+function getSupabase() {
+  if (!supabase) {
+    if (!process.env.SUPABASE_URL || !process.env.SUPABASE_ANON_KEY) {
+       console.error("Missing Supabase Environment Variables!");
+    }
+    supabase = createClient(
+      process.env.SUPABASE_URL!,
+      process.env.SUPABASE_ANON_KEY!
+    );
+  }
+  return supabase;
+}
 
 /**
  * Log a user interaction to Supabase
@@ -13,8 +22,9 @@ const supabase = createClient(
  */
 export async function logInteraction(phone: string, action: string, metadata: any = {}) {
   try {
+    const client = getSupabase();
     // Ensure user exists
-    await supabase
+    await client
       .from('users')
       .upsert(
         { phone, lastactive: new Date().toISOString() },
@@ -47,7 +57,7 @@ export async function logInteraction(phone: string, action: string, metadata: an
     }
 
     // Log the interaction
-    const { error } = await supabase
+    const { error } = await client
       .from('interactions')
       .insert(record);
 
@@ -63,7 +73,8 @@ export async function logInteraction(phone: string, action: string, metadata: an
  */
 export async function saveToWaitlist(phone: string) {
   try {
-    const { data, error } = await supabase
+    const client = getSupabase();
+    const { data, error } = await client
       .from('waitlist')
       .insert({ phone, datesubmitted: new Date().toISOString() });
 
