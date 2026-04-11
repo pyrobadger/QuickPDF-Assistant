@@ -52,49 +52,11 @@ QuickPDF Assistant is a specialized WhatsApp bot designed to handle complex PDF 
 - `public/`: Premium Landing Page with theme switching (Light/Dark mode).
 - `tmp/`: Temporary folder for downloading files.
 
-## 🚀 Getting Started
-
-### Prerequisites
-
-- [Node.js](https://nodejs.org/) (v16.x or later)
-- [Supabase](https://supabase.com/) (PostgreSQL database)
-- WhatsApp Business API credentials (via Meta Developer Portal)
-
-### Installation
-
-1. **Clone the repository**:
-   ```bash
-   git clone https://github.com/pyrobadger/QuickPDF-Assistant.git
-   cd QuickPDF-Assistant
-   ```
-
-2. **Install dependencies**:
-   ```bash
-   npm install
-   sudo apt install libreoffice
-   ```
-
-3. **Configure Environment Variables**:
-   Create a `.env` file in the root directory and add:
-   ```env
-   SUPABASE_URL=your_supabase_url
-   SUPABASE_KEY=your_supabase_key
-   WHATSAPP_PHONE_NUMBER_ID=your_whatsapp_phone_number_id
-   WHATSAPP_ACCESS_TOKEN=your_whatsapp_access_token
-   WHATSAPP_VERIFY_TOKEN=your_verify_token
-   PORT=3000
-   ```
-
-4. **Run the application**:
-   ```bash
-   npm start
-   ```
-
 ## 🌐 Deployment
 
-The project's frontend is optimized for **Vercel**. Simply connect your GitHub repository to Vercel, and it will handle the environment variables and serverless function routing automatically.
+The project's frontend is optimized for **Vercel**. 
 
-The project's backend is deployed on **Digital Ocean**. Create a droplet, install required dependencies, and clone the repo. Host the backend using pm2, configure the networking accordingly.
+The project's backend is deployed on **Digital Ocean**. 
 
 ---
 
