@@ -2,7 +2,7 @@
     "rewrites": [
         {
             "source": "/api/waitlist",
-            "destination": "/index.js"
+            "destination": "/dist/index.js"
         }
     ],
     "cleanUrls": true
