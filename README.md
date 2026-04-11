@@ -34,6 +34,7 @@ QuickPDF Assistant is a specialized WhatsApp bot designed to handle complex PDF 
 
 ## 🛠️ Tech Stack
 
+- **Language**: [TypeScript](https://www.typescriptlang.org/)
 - **Backend**: [Node.js](https://nodejs.org/) & [Express](https://expressjs.com/)
 - **Database**: [Supabase PostgreSQL](https://supabase.com/) (Logging & Waitlist)
 - **PDF Core**: [pdf-lib](https://pdf-lib.js.org/)
@@ -44,9 +45,9 @@ QuickPDF Assistant is a specialized WhatsApp bot designed to handle complex PDF 
 
 ## 📂 Project Structure
 
-- `index.js`: Main server entry point and API routes.
+- `index.ts`: Main server entry point and API routes.
 - `api/`: Vercel serverless functions (for specific integrations).
-- `controllers/`: Core bot logic and processing handlers (`botController.js`).
+- `controllers/`: Core bot logic and processing handlers (`botController.ts`).
 - `routes/`: Express routes for webhooks and API endpoints.
 - `services/`: Business logic, database connections, and helper scripts.
 - `public/`: Premium Landing Page with theme switching (Light/Dark mode).
