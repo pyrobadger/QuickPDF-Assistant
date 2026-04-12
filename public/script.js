@@ -200,48 +200,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // === Waitlist form ===
-    window.handleWaitlist = function (e) {
-        e.preventDefault();
-        const phone = document.getElementById('waitlist-phone').value;
-        if (!phone) return;
-
-        // Disable button while processing
-        const btn = document.querySelector('.waitlist-btn');
-        const originalText = btn.textContent;
-        btn.textContent = 'Submitting...';
-        btn.disabled = true;
-
-        // Post to your deployed backend
-        fetch('/api/waitlist', {
-            method: 'POST',
-            body: JSON.stringify({ phone }),
-            headers: { 'Content-Type': 'application/json' }
-        })
-            .then(res => res.json().then(data => ({ status: res.status, body: data })))
-            .then(({ status, body }) => {
-                btn.textContent = originalText;
-                btn.disabled = false;
-
-                if (status !== 200) {
-                    alert(body.error || 'Something went wrong. Please try again.');
-                    return;
-                }
-
-                // Hide form, show success visually only if backend succeeded
-                const formWrap = document.getElementById('waitlist-form-wrap');
-                const successMsg = document.getElementById('waitlist-success');
-                if (formWrap) formWrap.style.display = 'none';
-                if (successMsg) successMsg.classList.add('show');
-                console.log('Waitlist response:', body);
-            })
-            .catch(err => {
-                btn.textContent = originalText;
-                btn.disabled = false;
-                alert('Network error. Please make sure you are connected to the internet and try again.');
-                console.error('Error saving to waitlist API:', err);
-            });
-    };
+    // (Waitlist logic removed)
 
     // === Smooth Scroll (Lenis) ===
     if (typeof Lenis !== 'undefined') {

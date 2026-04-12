@@ -5,34 +5,27 @@ import * as database from '../services/database.js';
 import path from 'path';
 import fs from 'fs/promises';
 import crypto from 'crypto';
-
 class BotController {
-
-    async handleIncomingMessage(phoneNumberId: string, from: string, msg: any) {
+    async handleIncomingMessage(phoneNumberId, from, msg) {
         let session = sessionService.getSession(from);
-
         try {
             if (sessionService.isFirstTimeUser(from)) {
                 await this.sendOnboardingMessage(from);
                 // We keep going so they still get processed or see the menu
             }
-
             if (msg.type === 'text') {
                 const text = msg.text.body.toLowerCase().trim();
-
                 if (text === 'clear' || text === 'reset') {
                     sessionService.clearSession(from);
                     await whatsappService.sendTextMessage(from, '🧹 Your session has been cleared. Type "menu" to start a new task. ✨');
                     return;
                 }
-
                 // Always reset on 'hi' or 'menu'
                 if (text === 'hi' || text === 'hello' || text === 'menu') {
                     sessionService.clearSession(from);
                     await this.sendMainMenu(from);
                     return;
                 }
-
                 // Handle text inputs based on state
                 await this.handleTextState(from, text, session);
             }
@@ -45,27 +38,28 @@ class BotController {
                 let actionId = null;
                 if (interactive.type === 'list_reply') {
                     actionId = interactive.list_reply.id;
-                } else if (interactive.type === 'button_reply') {
+                }
+                else if (interactive.type === 'button_reply') {
                     actionId = interactive.button_reply.id;
                 }
-
                 if (actionId) {
                     await this.handleInteractiveSelection(from, actionId, session);
                 }
-            } else {
+            }
+            else {
                 if (msg.type === 'unsupported' || session.stage === 'collecting_images' || session.stage === 'collecting_merge_files') {
                     return;
                 }
                 await whatsappService.sendTextMessage(from, '🤔 I only understand text, image, and document messages. Type "menu" to start. 🚀');
             }
-        } catch (error) {
+        }
+        catch (error) {
             console.error('Error handling message:', error);
             await whatsappService.sendTextMessage(from, '⚠️ Sorry, something went wrong processing your request. Please try again later. 🛠️');
             sessionService.clearSession(from);
         }
     }
-
-    async sendOnboardingMessage(to: string) {
+    async sendOnboardingMessage(to) {
         const welcomeMessage = "👋 Welcome to QuickPDF!\n\n" +
             "The easiest way to work with PDFs — right here on WhatsApp. No apps, no browser, no ads.\n\n" +
             "Just send any PDF or image and I'll help you:\n" +
@@ -74,15 +68,12 @@ class BotController {
             "🔒 Protect or Unlock PDFs\n" +
             "🖼️ Combine multiple images into one PDF\n\n" +
             "Type *menu* anytime to get started. 🚀";
-
         await whatsappService.sendTextMessage(to, welcomeMessage);
     }
-
-    async sendMainMenu(to: string) {
+    async sendMainMenu(to) {
         const bodyText = '📄 What would you like to do?';
         const buttonText = 'Options';
         const title = 'QuickPDF Menu';
-
         const sections = [
             {
                 title: 'File Operations',
@@ -101,45 +92,38 @@ class BotController {
                 ]
             }
         ];
-
         await whatsappService.sendListMessage(to, bodyText, buttonText, sections, title);
     }
-
-    async handleInteractiveSelection(from: string, actionId: string, session: any) {
+    async handleInteractiveSelection(from, actionId, session) {
         console.log(`User ${from} selected action: ${actionId}`);
         // Log menu selection
         await database.logInteraction(from, 'menu_selection', { selectedId: actionId });
-
         const usage = sessionService.getDailyUsage(from);
         if (usage >= 5) {
             await whatsappService.sendTextMessage(from, '⏳ You have reached the free beta limit of 5 operations per day. Please try again tomorrow. 🌛');
             return;
         }
-
         if (actionId === 'action_merge_done') {
             if (session.action === 'menu_merge' && session.files.length >= 2) {
                 await this.processMerge(from, session);
-            } else {
+            }
+            else {
                 await whatsappService.sendTextMessage(from, '📎 You need to upload at least 2 PDFs first! 📄📄');
             }
             return;
         }
-
         if (actionId === 'action_images_done') {
             if (session.action === 'convert_images_to_pdf' && session.files.length >= 1) {
                 await this.processConversion(from, session);
-            } else {
+            }
+            else {
                 await whatsappService.sendTextMessage(from, '🖼️ You need to upload at least 1 image first! 📸');
             }
             return;
         }
-
         session.action = actionId;
         session.files = [];
-        session.metadata.orderedFiles = [];
-        session.metadata.fileOrderCounter = 0;
         session.stage = 'awaiting_document';
-
         switch (actionId) {
             case 'menu_merge':
                 await whatsappService.sendTextMessage(from, '🔗 You selected Merge PDFs.\nPlease upload 2 or more PDF files one by one. When done, tap "Done Merging". ✅');
@@ -212,11 +196,9 @@ class BotController {
                 sessionService.clearSession(from);
                 return;
         }
-
         sessionService.updateSession(from, session);
     }
-
-    async handleTextState(from: string, text: string, session: any) {
+    async handleTextState(from, text, session) {
         if (session.stage === 'awaiting_split_range') {
             const range = text.toUpperCase();
             await whatsappService.sendTextMessage(from, '⚙️ Processing split... this may take a moment. ⏳');
@@ -225,11 +207,13 @@ class BotController {
                 const outputPath = path.join('/tmp', `${crypto.randomUUID()}_split.pdf`);
                 await pdfWorker.splitPdf(inputPath, outputPath, range);
                 await this.sendResultAndCleanup(from, outputPath, 'application/pdf', 'document', 'Here is your split PDF.', session.metadata.originalName ? `${session.metadata.originalName}_split.pdf` : 'split.pdf', session.action);
-            } catch (err) {
+            }
+            catch (err) {
                 await whatsappService.sendTextMessage(from, '❌ Invalid page range or processing failed. Please try again. 🔄');
             }
             sessionService.clearSession(from);
-        } else if (session.stage === 'awaiting_password_protect') {
+        }
+        else if (session.stage === 'awaiting_password_protect') {
             await whatsappService.sendTextMessage(from, '🛡️ Securing your file... this may take a moment. 🔐');
             try {
                 const inputPath = session.files[0];
@@ -237,28 +221,31 @@ class BotController {
                 await pdfWorker.protectPdf(inputPath, outputPath, text); // text is password
                 // Note: user password text is logged in WA but we don't save it
                 await this.sendResultAndCleanup(from, outputPath, 'application/pdf', 'document', 'Here is your protected PDF.', session.metadata.originalName ? `${session.metadata.originalName}_protected.pdf` : 'protected.pdf', session.action);
-            } catch (err) {
+            }
+            catch (err) {
                 await whatsappService.sendTextMessage(from, '❌ Failed to protect PDF. ⚠️');
             }
             sessionService.clearSession(from);
-        } else if (session.stage === 'awaiting_password_unlock') {
+        }
+        else if (session.stage === 'awaiting_password_unlock') {
             await whatsappService.sendTextMessage(from, '🔓 Unlocking your file... this may take a moment. ⚙️');
             try {
                 const inputPath = session.files[0];
                 const outputPath = path.join('/tmp', `${crypto.randomUUID()}_unlocked.pdf`);
                 await pdfWorker.unlockPdf(inputPath, outputPath, text);
                 await this.sendResultAndCleanup(from, outputPath, 'application/pdf', 'document', 'Here is your unlocked PDF.', session.metadata.originalName ? `${session.metadata.originalName}_unlocked.pdf` : 'unlocked.pdf', session.action);
-            } catch (err) {
+            }
+            catch (err) {
                 await whatsappService.sendTextMessage(from, '❌ Failed to unlock PDF. The password might be incorrect. 🔑');
             }
             sessionService.clearSession(from);
-        } else {
+        }
+        else {
             // Default catch-all
             await whatsappService.sendTextMessage(from, '👋 Please select an option from the menu or upload the requested file. Send "menu" to view options. 📋');
         }
     }
-
-    async handleDocument(from: string, document: any, session: any, msgType: string) {
+    async handleDocument(from, document, session, msgType) {
         if (!session.action || session.stage === 'idle') {
             if (msgType === 'image') {
                 return; // Silently ignore race condition
@@ -267,7 +254,6 @@ class BotController {
             await this.sendMainMenu(from);
             return;
         }
-
         // Only process acceptable MIME types
         const acceptableMimes = [
             'application/pdf',
@@ -282,32 +268,28 @@ class BotController {
             await whatsappService.sendTextMessage(from, '🚫 Unsupported file type. Please upload a PDF, Image, Word, or PowerPoint document. 📄🖼️');
             return;
         }
-
-        // Synchronously capture order of arrival to preserve correct document sequence
-        session = sessionService.getSession(from);
-        session.metadata.fileOrderCounter = (session.metadata.fileOrderCounter || 0) + 1;
-        const expectedOrder = session.metadata.fileOrderCounter;
-        sessionService.updateSession(from, session);
-
         await whatsappService.sendTextMessage(from, '📥 Downloading your file... ⏳');
-
         try {
             const mediaUrl = await whatsappService.getMediaUrl(document.id);
             let ext = '';
-            if (document.mime_type === 'application/pdf') ext = '.pdf';
-            else if (document.mime_type === 'image/jpeg') ext = '.jpg';
-            else if (document.mime_type === 'image/png') ext = '.png';
-            else if (document.mime_type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') ext = '.docx';
-            else if (document.mime_type === 'application/msword') ext = '.doc';
-            else if (document.mime_type === 'application/vnd.openxmlformats-officedocument.presentationml.presentation') ext = '.pptx';
-            else if (document.mime_type === 'application/vnd.ms-powerpoint') ext = '.ppt';
-
+            if (document.mime_type === 'application/pdf')
+                ext = '.pdf';
+            else if (document.mime_type === 'image/jpeg')
+                ext = '.jpg';
+            else if (document.mime_type === 'image/png')
+                ext = '.png';
+            else if (document.mime_type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document')
+                ext = '.docx';
+            else if (document.mime_type === 'application/msword')
+                ext = '.doc';
+            else if (document.mime_type === 'application/vnd.openxmlformats-officedocument.presentationml.presentation')
+                ext = '.pptx';
+            else if (document.mime_type === 'application/vnd.ms-powerpoint')
+                ext = '.ppt';
             const localPath = path.join('/tmp', `${crypto.randomUUID()}${ext}`);
             await whatsappService.downloadMedia(mediaUrl, localPath);
-
             // Because WhatsApp might send multiple webhooks concurrently, fetch the freshest session state
             session = sessionService.getSession(from);
-
             if (document.filename) {
                 const basename = path.basename(document.filename, path.extname(document.filename));
                 session.metadata.originalName = basename;
@@ -325,29 +307,21 @@ class BotController {
                 await whatsappService.sendTextMessage(from, limitMsg);
                 return;
             }
-
             // Fresh read -> mutate -> save immediately to avoid race conditions
-            session.metadata.orderedFiles = session.metadata.orderedFiles || [];
-            
+            session.files.push(localPath);
             // Enforce max 20 images for a single conversion
-            if (session.metadata.orderedFiles.length >= 20) {
+            if (session.files.length > 20) {
+                // Remove the newly added file to keep session clean
                 await fs.unlink(localPath).catch(() => { });
                 await whatsappService.sendTextMessage(from, '🛑 You have reached the maximum of 20 images per PDF. Please finish or start a new conversion. 📁');
                 return;
             }
-
-            session.metadata.orderedFiles.push({ path: localPath, order: expectedOrder });
-            session.metadata.orderedFiles.sort((a: any, b: any) => a.order - b.order);
-            session.files = session.metadata.orderedFiles.map((f: any) => f.path);
-            
             sessionService.updateSession(from, session);
-
             // React based on action and stage
             if (session.action === 'menu_merge' && session.stage === 'collecting_merge_files') {
                 // Throttle the "File received" messages if they upload a batch of 10 files
                 // Send only every 2nd file or just a brief generic ack
                 await whatsappService.sendTextMessage(from, `📥 File ${session.files.length} received. Upload another or tap "Done Merging". 📎`);
-
                 // Only send the button once to prevent spamming the user's chat with 5 buttons
                 if (session.files.length === 1) {
                     await whatsappService.sendReplyButtons(from, 'Are you finished uploading?', [{ id: 'action_merge_done', title: 'Done Merging' }]);
@@ -377,66 +351,61 @@ class BotController {
                 sessionService.updateSession(from, session);
                 await whatsappService.sendTextMessage(from, '🔑 Please type the current password to unlock this PDF: 🔓');
             }
-        } catch (error) {
+        }
+        catch (error) {
             console.error('Failed processing document upload:', error);
             await whatsappService.sendTextMessage(from, '❌ Failed to download your file. Please try again. 🔄');
         }
     }
-
-    async processMerge(from: string, session: any) {
+    async processMerge(from, session) {
         await whatsappService.sendTextMessage(from, '🔗 Merging your files... this may take a moment. ⏳');
         try {
             const outputPath = path.join('/tmp', `${crypto.randomUUID()}_merged.pdf`);
             await pdfWorker.mergePdfs(session.files, outputPath);
             await this.sendResultAndCleanup(from, outputPath, 'application/pdf', 'document', 'Here is your merged PDF.', 'merged.pdf', session.action);
-        } catch (error) {
+        }
+        catch (error) {
             console.error('Merge error:', error);
             await whatsappService.sendTextMessage(from, '❌ Failed to merge files. Ensure they are valid PDFs. 📄');
         }
         sessionService.clearSession(from);
     }
-
-    async processCompression(from: string, session: any) {
+    async processCompression(from, session) {
         await whatsappService.sendTextMessage(from, '🗜️ Compressing your file... this may take a moment. ⏳');
         try {
             const inputPath = session.files[0];
             const outputPath = path.join('/tmp', `${crypto.randomUUID()}_compressed.pdf`);
-
             // Map our sizes to Ghostscript PDFSETTINGS
             let gsLevel = 'ebook'; // medium
-            if (session.metadata.compressLevel === 'low') gsLevel = 'printer'; // high quality
-            if (session.metadata.compressLevel === 'high') gsLevel = 'screen'; // smallest
-
+            if (session.metadata.compressLevel === 'low')
+                gsLevel = 'printer'; // high quality
+            if (session.metadata.compressLevel === 'high')
+                gsLevel = 'screen'; // smallest
             await pdfWorker.compressPdf(inputPath, outputPath, gsLevel);
-
             // Get file sizes for comparison
             const statsOrig = await fs.stat(inputPath);
             const statsNew = await fs.stat(outputPath);
             const origMb = (statsOrig.size / (1024 * 1024)).toFixed(1);
             const newMb = (statsNew.size / (1024 * 1024)).toFixed(1);
-
             await this.sendResultAndCleanup(from, outputPath, 'application/pdf', 'document', `✅ Successfully compressed from ${origMb}MB to ${newMb}MB! 📉`, session.metadata.originalName ? `${session.metadata.originalName}_compressed.pdf` : 'compressed.pdf', session.action);
-        } catch (error) {
+        }
+        catch (error) {
             console.error('Compression error:', error);
             await whatsappService.sendTextMessage(from, '❌ Failed to compress the file. ⚠️');
         }
         sessionService.clearSession(from);
     }
-
-    async processConversion(from: string, session: any) {
+    async processConversion(from, session) {
         await whatsappService.sendTextMessage(from, '🔄 Converting your file... this may take a moment. ⏳');
         try {
             const inputPath = session.files[0];
             const type = session.metadata.convertType;
-
             if (type === 'convert_pdf_to_jpg') {
                 // Returns directory path containing the converted JPEGs
                 const outputDir = path.join('/tmp', crypto.randomUUID());
                 await fs.mkdir(outputDir);
-
                 try {
                     await pdfWorker.convertPdfToImage(inputPath, outputDir);
-
                     // Read dir and send all images
                     const images = await fs.readdir(outputDir);
                     // Sort them logically (page-1.jpg, page-2.jpg etc)
@@ -445,43 +414,45 @@ class BotController {
                         const numB = parseInt(b.match(/\d+/)?.[0] ?? '0', 10);
                         return numA - numB;
                     });
-
                     if (images.length > 0) {
                         for (let i = 0; i < images.length; i++) {
                             const imgName = images[i];
-                            if (!imgName) continue;
+                            if (!imgName)
+                                continue;
                             const imagePath = path.join(outputDir, imgName);
                             // Use the underlying sendResultAndCleanup logic to send each file,
                             try {
                                 const mediaId = await whatsappService.uploadMedia(imagePath, 'image');
                                 await whatsappService.sendImageId(from, mediaId);
-                            } catch (e) {
+                            }
+                            catch (e) {
                                 console.error(`Failed to send ${imgName}`, e);
                             }
                         }
-
                         // Send completion summary
                         await whatsappService.sendTextMessage(from, `✅ Done! ${images.length} pages sent! 🖼️`);
-
                         // Log PDF to JPG completion
                         await database.logInteraction(from, session.action, {
                             pageCount: images.length,
                             status: 'success'
                         });
-
                         // Cleanup the whole directory manually
                         try {
                             for (const img of images) {
                                 await fs.unlink(path.join(outputDir, img)).catch(() => { });
                             }
                             await fs.rmdir(outputDir).catch(() => { });
-                        } catch (e) { console.error('Failed to clear tmp dir', e); }
-
-                    } else {
+                        }
+                        catch (e) {
+                            console.error('Failed to clear tmp dir', e);
+                        }
+                    }
+                    else {
                         throw new Error('No images generated');
                     }
                     sessionService.clearSession(from);
-                } catch (pdfErr: any) {
+                }
+                catch (pdfErr) {
                     if (pdfErr.message && pdfErr.message.startsWith('MAX_PAGES_EXCEEDED')) {
                         const count = pdfErr.message.split(':')[1];
                         await whatsappService.sendTextMessage(from, `⚠️ This PDF has ${count} pages. PDF to JPG supports a maximum of 10 pages. 📄`);
@@ -491,60 +462,58 @@ class BotController {
                     }
                     throw pdfErr; // Re-throw to be caught by the general block
                 }
-            } else if (type === 'convert_docx_to_pdf' || type === 'convert_pptx_to_pdf') {
+            }
+            else if (type === 'convert_docx_to_pdf' || type === 'convert_pptx_to_pdf') {
                 const outputDir = path.join('/tmp');
                 const outputPath = await pdfWorker.convertDocxToPdf(inputPath, outputDir);
                 await this.sendResultAndCleanup(from, outputPath, 'application/pdf', 'document', 'Here is your converted PDF.', session.metadata.originalName ? `${session.metadata.originalName}.pdf` : 'converted.pdf', session.action);
-            } else if (type === 'convert_pdf_to_docx') {
+            }
+            else if (type === 'convert_pdf_to_docx') {
                 const outputDir = path.join('/tmp');
                 const outputPath = await pdfWorker.convertPdfToDocx(inputPath, outputDir);
                 await this.sendResultAndCleanup(from, outputPath, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'document', 'Here is your converted Word document.', session.metadata.originalName ? `${session.metadata.originalName}.docx` : 'converted.docx', session.action);
-            } else if (type === 'convert_images_to_pdf') {
+            }
+            else if (type === 'convert_images_to_pdf') {
                 const outputPath = path.join('/tmp', `${crypto.randomUUID()}_images_converted.pdf`);
                 await pdfWorker.convertImagesToPdf(session.files, outputPath);
                 await this.sendResultAndCleanup(from, outputPath, 'application/pdf', 'document', 'Here is your merged image PDF.', 'images.pdf', session.action);
             }
-        } catch (error) {
+        }
+        catch (error) {
             console.error('Conversion error:', error);
             await whatsappService.sendTextMessage(from, '❌ Failed to convert the file. ⚠️');
         }
         sessionService.clearSession(from);
     }
-
-    async sendResultAndCleanup(to: string, filePath: string, mimeType: string, type = 'document', caption = '', outputFilename: string | null = null, action = 'unknown') {
+    async sendResultAndCleanup(to, filePath, mimeType, type = 'document', caption = '', outputFilename = null, action = 'unknown') {
         try {
             const stats = await fs.stat(filePath);
             const fileSizeMb = (stats.size / (1024 * 1024)).toFixed(2);
-
             // Log the interaction
             await database.logInteraction(to, action, {
                 fileSizeMb: parseFloat(fileSizeMb),
                 mimeType: mimeType,
                 status: 'success'
             });
-
             const usage = sessionService.incrementDailyUsage(to);
             console.log(`User ${to} has used ${usage} operations today.`);
-
             console.log(`Uploading processed file to WhatsApp: ${filePath}`);
             const mediaId = await whatsappService.uploadMedia(filePath, type);
-
             const finalName = outputFilename || path.basename(filePath);
             const watermarkedCaption = `${caption ? caption + '\n\n' : ''}✨ Processed by *QuickPDF Assistant* 📄\n🌐 www.quickpdfassistant.in`;
-
             console.log(`Sending document ${mediaId} to ${to}`);
             await whatsappService.sendDocumentId(to, mediaId, finalName, watermarkedCaption);
-        } catch (error) {
+        }
+        catch (error) {
             console.error('Error sending resulting document:', error);
             await whatsappService.sendTextMessage(to, '⚠️ Processed your request but failed to send the resulting file. 🛠️');
         }
-
         // Fire and forget cleanup (could be moved to a cron job in a real app)
         try {
             // we will let cron job handle it ideally, but for now we manually delete just the result file
             await fs.unlink(filePath).catch(() => { });
-        } catch (e) { }
+        }
+        catch (e) { }
     }
 }
-
 export default new BotController();
