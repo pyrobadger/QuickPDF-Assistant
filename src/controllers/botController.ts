@@ -289,7 +289,9 @@ class BotController {
         const expectedOrder = session.metadata.fileOrderCounter;
         sessionService.updateSession(from, session);
 
-        await whatsappService.sendTextMessage(from, '📥 Downloading your file... ⏳');
+        if (expectedOrder === 1) {
+            await whatsappService.sendTextMessage(from, '📥 Receiving your file(s)... ⏳');
+        }
 
         try {
             const mediaUrl = await whatsappService.getMediaUrl(document.id);
@@ -344,17 +346,15 @@ class BotController {
 
             // React based on action and stage
             if (session.action === 'menu_merge' && session.stage === 'collecting_merge_files') {
-                // Throttle the "File received" messages if they upload a batch of 10 files
-                // Send only every 2nd file or just a brief generic ack
-                await whatsappService.sendTextMessage(from, `📥 File ${session.files.length} received. Upload another or tap "Done Merging". 📎`);
-
-                // Only send the button once to prevent spamming the user's chat with 5 buttons
-                if (session.files.length === 1) {
-                    await whatsappService.sendReplyButtons(from, 'Are you finished uploading?', [{ id: 'action_merge_done', title: 'Done Merging' }]);
+                // Throttle "File received" messages directly to the interactive button prompt
+                if (expectedOrder === 1 || expectedOrder % 5 === 0) {
+                    await whatsappService.sendReplyButtons(from, `📥 Received ${session.files.length} file(s) so far. Upload more or tap "Done Merging".`, [{ id: 'action_merge_done', title: 'Done Merging' }]);
                 }
             }
             else if (session.action === 'convert_images_to_pdf' && session.stage === 'collecting_images') {
-                await whatsappService.sendTextMessage(from, `📸 Image ${session.files.length} received. Send more or tap "Done". 🖼️`);
+                if (expectedOrder === 1 || expectedOrder % 5 === 0) {
+                    await whatsappService.sendReplyButtons(from, `📸 Received ${session.files.length} image(s) so far. Send more or tap "Done".`, [{ id: 'action_images_done', title: 'Done' }]);
+                }
             }
             else if (session.action === 'menu_compress' || session.action.startsWith('compress_')) {
                 await this.processCompression(from, session);
