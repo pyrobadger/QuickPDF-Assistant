@@ -3,6 +3,8 @@
 
 QuickPDF Assistant is a specialized WhatsApp bot designed to handle complex PDF tasks like merging, splitting, compressing, and converting files, all without leaving your WhatsApp chat. No extra apps needed!
 
+WhatsApp PDF Bot – Convert, Compress, Merge PDFs Instantly
+
 ---
 
 > [!TIP]
