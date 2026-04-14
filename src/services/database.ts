@@ -91,3 +91,31 @@ export async function saveToWaitlist(phone: string) {
     throw err;
   }
 }
+
+/**
+ * Log document processing statistics to a dedicated table
+ * @param {string} phone - User's phone number
+ * @param {string} action - Action performed
+ * @param {number} inputCount - Number of input documents
+ * @param {number} outputCount - Number of output documents
+ */
+export async function logDocumentStats(phone: string, action: string, inputCount: number, outputCount: number) {
+  try {
+    const client = getSupabase();
+    const record = {
+      phone,
+      action,
+      input_count: inputCount,
+      output_count: outputCount,
+      timestamp: new Date().toISOString()
+    };
+    
+    const { error } = await client
+      .from('document_stats')
+      .insert(record);
+
+    if (error) throw error;
+  } catch (error) {
+    console.error('Failed to log document stats to Supabase:', error);
+  }
+}

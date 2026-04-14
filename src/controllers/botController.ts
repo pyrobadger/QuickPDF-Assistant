@@ -224,7 +224,7 @@ class BotController {
                 const inputPath = session.files[0];
                 const outputPath = path.join('/tmp', `${crypto.randomUUID()}_split.pdf`);
                 await pdfWorker.splitPdf(inputPath, outputPath, range);
-                await this.sendResultAndCleanup(from, outputPath, 'application/pdf', 'document', 'Here is your split PDF.', session.metadata.originalName ? `${session.metadata.originalName}_split.pdf` : 'split.pdf', session.action);
+                await this.sendResultAndCleanup(from, outputPath, 'application/pdf', 'document', 'Here is your split PDF.', session.metadata.originalName ? `${session.metadata.originalName}_split.pdf` : 'split.pdf', session.action, session.files?.length || 1);
             } catch (err) {
                 await whatsappService.sendTextMessage(from, '❌ Invalid page range or processing failed. Please try again. 🔄');
             }
@@ -236,7 +236,7 @@ class BotController {
                 const outputPath = path.join('/tmp', `${crypto.randomUUID()}_protected.pdf`);
                 await pdfWorker.protectPdf(inputPath, outputPath, text); // text is password
                 // Note: user password text is logged in WA but we don't save it
-                await this.sendResultAndCleanup(from, outputPath, 'application/pdf', 'document', 'Here is your protected PDF.', session.metadata.originalName ? `${session.metadata.originalName}_protected.pdf` : 'protected.pdf', session.action);
+                await this.sendResultAndCleanup(from, outputPath, 'application/pdf', 'document', 'Here is your protected PDF.', session.metadata.originalName ? `${session.metadata.originalName}_protected.pdf` : 'protected.pdf', session.action, session.files?.length || 1);
             } catch (err) {
                 await whatsappService.sendTextMessage(from, '❌ Failed to protect PDF. ⚠️');
             }
@@ -247,7 +247,7 @@ class BotController {
                 const inputPath = session.files[0];
                 const outputPath = path.join('/tmp', `${crypto.randomUUID()}_unlocked.pdf`);
                 await pdfWorker.unlockPdf(inputPath, outputPath, text);
-                await this.sendResultAndCleanup(from, outputPath, 'application/pdf', 'document', 'Here is your unlocked PDF.', session.metadata.originalName ? `${session.metadata.originalName}_unlocked.pdf` : 'unlocked.pdf', session.action);
+                await this.sendResultAndCleanup(from, outputPath, 'application/pdf', 'document', 'Here is your unlocked PDF.', session.metadata.originalName ? `${session.metadata.originalName}_unlocked.pdf` : 'unlocked.pdf', session.action, session.files?.length || 1);
             } catch (err) {
                 await whatsappService.sendTextMessage(from, '❌ Failed to unlock PDF. The password might be incorrect. 🔑');
             }
@@ -388,7 +388,7 @@ class BotController {
         try {
             const outputPath = path.join('/tmp', `${crypto.randomUUID()}_merged.pdf`);
             await pdfWorker.mergePdfs(session.files, outputPath);
-            await this.sendResultAndCleanup(from, outputPath, 'application/pdf', 'document', 'Here is your merged PDF.', 'merged.pdf', session.action);
+            await this.sendResultAndCleanup(from, outputPath, 'application/pdf', 'document', 'Here is your merged PDF.', 'merged.pdf', session.action, session.files?.length || 1);
         } catch (error) {
             console.error('Merge error:', error);
             await whatsappService.sendTextMessage(from, '❌ Failed to merge files. Ensure they are valid PDFs. 📄');
@@ -415,7 +415,7 @@ class BotController {
             const origMb = (statsOrig.size / (1024 * 1024)).toFixed(1);
             const newMb = (statsNew.size / (1024 * 1024)).toFixed(1);
 
-            await this.sendResultAndCleanup(from, outputPath, 'application/pdf', 'document', `✅ Successfully compressed from ${origMb}MB to ${newMb}MB! 📉`, session.metadata.originalName ? `${session.metadata.originalName}_compressed.pdf` : 'compressed.pdf', session.action);
+            await this.sendResultAndCleanup(from, outputPath, 'application/pdf', 'document', `✅ Successfully compressed from ${origMb}MB to ${newMb}MB! 📉`, session.metadata.originalName ? `${session.metadata.originalName}_compressed.pdf` : 'compressed.pdf', session.action, session.files?.length || 1);
         } catch (error) {
             console.error('Compression error:', error);
             await whatsappService.sendTextMessage(from, '❌ Failed to compress the file. ⚠️');
@@ -469,6 +469,8 @@ class BotController {
                             status: 'success'
                         });
 
+                        await database.logDocumentStats(from, session.action, session.files?.length || 1, images.length);
+
                         // Cleanup the whole directory manually
                         try {
                             for (const img of images) {
@@ -494,15 +496,15 @@ class BotController {
             } else if (type === 'convert_docx_to_pdf' || type === 'convert_pptx_to_pdf') {
                 const outputDir = path.join('/tmp');
                 const outputPath = await pdfWorker.convertDocxToPdf(inputPath, outputDir);
-                await this.sendResultAndCleanup(from, outputPath, 'application/pdf', 'document', 'Here is your converted PDF.', session.metadata.originalName ? `${session.metadata.originalName}.pdf` : 'converted.pdf', session.action);
+                await this.sendResultAndCleanup(from, outputPath, 'application/pdf', 'document', 'Here is your converted PDF.', session.metadata.originalName ? `${session.metadata.originalName}.pdf` : 'converted.pdf', session.action, session.files?.length || 1);
             } else if (type === 'convert_pdf_to_docx') {
                 const outputDir = path.join('/tmp');
                 const outputPath = await pdfWorker.convertPdfToDocx(inputPath, outputDir);
-                await this.sendResultAndCleanup(from, outputPath, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'document', 'Here is your converted Word document.', session.metadata.originalName ? `${session.metadata.originalName}.docx` : 'converted.docx', session.action);
+                await this.sendResultAndCleanup(from, outputPath, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'document', 'Here is your converted Word document.', session.metadata.originalName ? `${session.metadata.originalName}.docx` : 'converted.docx', session.action, session.files?.length || 1);
             } else if (type === 'convert_images_to_pdf') {
                 const outputPath = path.join('/tmp', `${crypto.randomUUID()}_images_converted.pdf`);
                 await pdfWorker.convertImagesToPdf(session.files, outputPath);
-                await this.sendResultAndCleanup(from, outputPath, 'application/pdf', 'document', 'Here is your merged image PDF.', 'images.pdf', session.action);
+                await this.sendResultAndCleanup(from, outputPath, 'application/pdf', 'document', 'Here is your merged image PDF.', 'images.pdf', session.action, session.files?.length || 1);
             }
         } catch (error) {
             console.error('Conversion error:', error);
@@ -511,7 +513,7 @@ class BotController {
         sessionService.clearSession(from);
     }
 
-    async sendResultAndCleanup(to: string, filePath: string, mimeType: string, type = 'document', caption = '', outputFilename: string | null = null, action = 'unknown') {
+    async sendResultAndCleanup(to: string, filePath: string, mimeType: string, type = 'document', caption = '', outputFilename: string | null = null, action = 'unknown', inputDocumentCount = 1, outputDocumentCount = 1) {
         try {
             const stats = await fs.stat(filePath);
             const fileSizeMb = (stats.size / (1024 * 1024)).toFixed(2);
@@ -522,6 +524,8 @@ class BotController {
                 mimeType: mimeType,
                 status: 'success'
             });
+
+            await database.logDocumentStats(to, action, inputDocumentCount, outputDocumentCount);
 
             const usage = sessionService.incrementDailyUsage(to);
             console.log(`User ${to} has used ${usage} operations today.`);
