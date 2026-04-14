@@ -24,12 +24,17 @@ export async function logInteraction(phone: string, action: string, metadata: an
   try {
     const client = getSupabase();
     // Ensure user exists
-    await client
+    const { error: userError } = await client
       .from('users')
       .upsert(
         { phone, lastactive: new Date().toISOString() },
         { onConflict: 'phone' }
       );
+    
+    if (userError) {
+      console.error('Failed to upsert user:', userError);
+      // We continue anyway to try and log the interaction
+    }
 
     // Prepare interaction record
     const record: any = {
@@ -57,11 +62,13 @@ export async function logInteraction(phone: string, action: string, metadata: an
     }
 
     // Log the interaction
+    console.log(`Attempting to log interaction for ${phone}: ${action}`);
     const { error } = await client
       .from('interactions')
       .insert(record);
 
     if (error) throw error;
+    console.log(`Successfully logged interaction for ${phone}`);
   } catch (error) {
     console.error('Failed to log interaction to Supabase:', error);
   }
