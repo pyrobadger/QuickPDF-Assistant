@@ -283,6 +283,31 @@ class BotController {
             return;
         }
 
+        // Operation-specific file type validation (reject wrong types BEFORE downloading)
+        const pdfOnlyActions = ['menu_merge', 'menu_split', 'menu_compress', 'menu_protect', 'menu_unlock', 'convert_pdf_to_jpg', 'convert_pdf_to_docx'];
+        const isPdfOnlyAction = pdfOnlyActions.includes(session.action) || (session.action && session.action.startsWith('compress_'));
+        if (isPdfOnlyAction && document.mime_type !== 'application/pdf') {
+            await whatsappService.sendTextMessage(from, '🚫 This operation requires a PDF file. Please upload a valid PDF document. 📄');
+            return;
+        }
+
+        if (session.action === 'convert_images_to_pdf' && !['image/jpeg', 'image/png'].includes(document.mime_type)) {
+            await whatsappService.sendTextMessage(from, '🚫 This operation requires image files (JPG or PNG). Please upload a valid image. 🖼️');
+            return;
+        }
+
+        const docxMimes = ['application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/msword'];
+        if (session.action === 'convert_docx_to_pdf' && !docxMimes.includes(document.mime_type)) {
+            await whatsappService.sendTextMessage(from, '🚫 This operation requires a Word document (DOC/DOCX). Please upload a valid Word file. 📝');
+            return;
+        }
+
+        const pptxMimes = ['application/vnd.openxmlformats-officedocument.presentationml.presentation', 'application/vnd.ms-powerpoint'];
+        if (session.action === 'convert_pptx_to_pdf' && !pptxMimes.includes(document.mime_type)) {
+            await whatsappService.sendTextMessage(from, '🚫 This operation requires a PowerPoint file (PPT/PPTX). Please upload a valid PowerPoint document. 📊');
+            return;
+        }
+
         // Synchronously capture order of arrival to preserve correct document sequence
         session = sessionService.getSession(from);
         session.metadata.fileOrderCounter = (session.metadata.fileOrderCounter || 0) + 1;
@@ -330,11 +355,27 @@ class BotController {
 
             // Fresh read -> mutate -> save immediately to avoid race conditions
             session.metadata.orderedFiles = session.metadata.orderedFiles || [];
-            
-            // Enforce max 20 images for a single conversion
-            if (session.metadata.orderedFiles.length >= 20) {
+
+            // Enforce max 20 PDFs for merge operation
+            if (session.action === 'menu_merge' && session.metadata.orderedFiles.length >= 20) {
+                await fs.unlink(localPath).catch(() => { });
+                await whatsappService.sendTextMessage(from, '🛑 You can merge a maximum of 20 PDFs at once. Please tap "Done Merging" to proceed with the files you\'ve uploaded, or type "clear" to start over. 📁');
+                return;
+            }
+
+            // Enforce max 20 images for a single images-to-PDF conversion
+            if (session.action === 'convert_images_to_pdf' && session.metadata.orderedFiles.length >= 20) {
                 await fs.unlink(localPath).catch(() => { });
                 await whatsappService.sendTextMessage(from, '🛑 You have reached the maximum of 20 images per PDF. Please finish or start a new conversion. 📁');
+                return;
+            }
+
+            // Single-file operations: reject additional files beyond the first
+            const singleFileActions = ['menu_split', 'menu_protect', 'menu_unlock', 'convert_pdf_to_jpg', 'convert_docx_to_pdf', 'convert_pdf_to_docx', 'convert_pptx_to_pdf'];
+            const isSingleFileAction = singleFileActions.includes(session.action) || (session.action && session.action.startsWith('compress_'));
+            if (isSingleFileAction && session.metadata.orderedFiles.length >= 1) {
+                await fs.unlink(localPath).catch(() => { });
+                await whatsappService.sendTextMessage(from, '⚠️ This operation only requires one file. Your file is already being processed. Type "clear" to start over if you want to use a different file. 🔄');
                 return;
             }
 
