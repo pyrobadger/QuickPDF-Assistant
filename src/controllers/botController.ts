@@ -382,7 +382,7 @@ class BotController {
             session.metadata.orderedFiles.push({ path: localPath, order: expectedOrder });
             session.metadata.orderedFiles.sort((a: any, b: any) => a.order - b.order);
             session.files = session.metadata.orderedFiles.map((f: any) => f.path);
-            
+
             sessionService.updateSession(from, session);
 
             // React based on action and stage
