@@ -268,6 +268,12 @@ class BotController {
             return;
         }
 
+        // Block document uploads while still awaiting compression level selection
+        if (session.action === 'menu_compress' && session.stage === 'awaiting_compression_level') {
+            await whatsappService.sendTextMessage(from, '⚠️ Please choose a compression level first before uploading your file. 🗜️');
+            return;
+        }
+
         // Only process acceptable MIME types
         const acceptableMimes = [
             'application/pdf',
@@ -314,6 +320,26 @@ class BotController {
         const expectedOrder = session.metadata.fileOrderCounter;
         sessionService.updateSession(from, session);
 
+        // Enforce max 20 PDFs for merge operation immediately
+        if (session.action === 'menu_merge' && expectedOrder > 20) {
+            await whatsappService.sendTextMessage(from, '🛑 You can merge a maximum of 20 PDFs at once. Please tap "Done Merging" to proceed with the files you\'ve uploaded, or type "clear" to start over. 📁');
+            return;
+        }
+
+        // Enforce max 20 images for a single images-to-PDF conversion immediately
+        if (session.action === 'convert_images_to_pdf' && expectedOrder > 20) {
+            await whatsappService.sendTextMessage(from, '🛑 You have reached the maximum of 20 images per PDF. Please finish or start a new conversion. 📁');
+            return;
+        }
+
+        // Single-file operations: reject additional files beyond the first immediately
+        const singleFileActions = ['menu_split', 'menu_compress', 'menu_protect', 'menu_unlock', 'convert_pdf_to_jpg', 'convert_docx_to_pdf', 'convert_pdf_to_docx', 'convert_pptx_to_pdf'];
+        const isSingleFileAction = singleFileActions.includes(session.action) || (session.action && session.action.startsWith('compress_'));
+        if (isSingleFileAction && expectedOrder > 1) {
+            await whatsappService.sendTextMessage(from, '⚠️ This operation only requires one file. Your file is already being processed. Type "clear" to start over if you want to use a different file. 🔄');
+            return;
+        }
+
         if (expectedOrder === 1) {
             await whatsappService.sendTextMessage(from, '📥 Receiving your file(s)... ⏳');
         }
@@ -355,29 +381,6 @@ class BotController {
 
             // Fresh read -> mutate -> save immediately to avoid race conditions
             session.metadata.orderedFiles = session.metadata.orderedFiles || [];
-
-            // Enforce max 20 PDFs for merge operation
-            if (session.action === 'menu_merge' && session.metadata.orderedFiles.length >= 20) {
-                await fs.unlink(localPath).catch(() => { });
-                await whatsappService.sendTextMessage(from, '🛑 You can merge a maximum of 20 PDFs at once. Please tap "Done Merging" to proceed with the files you\'ve uploaded, or type "clear" to start over. 📁');
-                return;
-            }
-
-            // Enforce max 20 images for a single images-to-PDF conversion
-            if (session.action === 'convert_images_to_pdf' && session.metadata.orderedFiles.length >= 20) {
-                await fs.unlink(localPath).catch(() => { });
-                await whatsappService.sendTextMessage(from, '🛑 You have reached the maximum of 20 images per PDF. Please finish or start a new conversion. 📁');
-                return;
-            }
-
-            // Single-file operations: reject additional files beyond the first
-            const singleFileActions = ['menu_split', 'menu_protect', 'menu_unlock', 'convert_pdf_to_jpg', 'convert_docx_to_pdf', 'convert_pdf_to_docx', 'convert_pptx_to_pdf'];
-            const isSingleFileAction = singleFileActions.includes(session.action) || (session.action && session.action.startsWith('compress_'));
-            if (isSingleFileAction && session.metadata.orderedFiles.length >= 1) {
-                await fs.unlink(localPath).catch(() => { });
-                await whatsappService.sendTextMessage(from, '⚠️ This operation only requires one file. Your file is already being processed. Type "clear" to start over if you want to use a different file. 🔄');
-                return;
-            }
 
             session.metadata.orderedFiles.push({ path: localPath, order: expectedOrder });
             session.metadata.orderedFiles.sort((a: any, b: any) => a.order - b.order);
