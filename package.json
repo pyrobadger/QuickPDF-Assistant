@@ -19,6 +19,7 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "dev": "node --watch --loader ts-node/esm src/index.ts",
+    "waitlist": "node --loader ts-node/esm src/scripts/sendWaitlist.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -28,6 +29,7 @@
   "devDependencies": {
     "@types/express": "^5.0.6",
     "@types/node": "^25.6.0",
+    "ts-node": "^10.9.2",
     "typescript": "^6.0.2"
   }
 }
