@@ -2077,6 +2077,7 @@ img {
     display: flex;
     align-items: center;
     justify-content: center;
+    padding: 16px;
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.3s ease;
@@ -2091,6 +2092,7 @@ img {
     background: var(--color-surface);
     width: 100%;
     max-width: 900px;
+    max-height: calc(100vh - 32px);
     border-radius: var(--radius-2xl);
     box-shadow: var(--shadow-lg);
     display: flex;
@@ -2108,33 +2110,36 @@ img {
 
 .upgrade-modal-close {
     position: absolute;
-    top: 16px;
-    right: 16px;
-    background: none;
-    border: none;
-    font-size: 24px;
+    top: 12px;
+    right: 12px;
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    font-size: 20px;
     color: var(--color-text-secondary);
     cursor: pointer;
-    z-index: 10;
-    padding: 8px;
+    z-index: 20;
+    padding: 6px;
     border-radius: 50%;
     transition: background 0.2s;
+    box-shadow: var(--shadow-sm);
 }
 
 .upgrade-modal-close:hover {
-    background: var(--color-bg);
+    background: var(--color-border);
     color: var(--color-text);
 }
 
 .upgrade-modal-body {
     display: flex;
-    flex-direction: column;
+    flex-direction: column-reverse;
+    overflow-y: auto;
 }
 
 @media (min-width: 768px) {
     .upgrade-modal-body {
         flex-direction: row;
         min-height: 500px;
+        overflow-y: hidden;
     }
 }
 
