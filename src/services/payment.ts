@@ -99,7 +99,7 @@ export function verifySignature(orderId: string, paymentId: string, signature: s
   
   const generatedSignature = crypto
     .createHmac('sha256', secret)
-    .update(orderId + "|" + paymentId)
+    .update(paymentId + "|" + orderId) // For subscriptions, Razorpay reverses the order! payment_id | subscription_id
     .digest('hex');
     
   return generatedSignature === signature;
