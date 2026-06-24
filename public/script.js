@@ -159,19 +159,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const proPrice = document.getElementById('pro-price');
     const proPeriod = document.getElementById('pro-period');
     const proYearlyNote = document.getElementById('pro-yearly-note');
-    let isYearly = false;
+    window.billingIsYearly = false; // Expose globally for checkout
 
     if (billingToggle) {
         billingToggle.addEventListener('click', () => {
-            isYearly = !isYearly;
-            billingToggle.classList.toggle('yearly', isYearly);
-            if (labelMonthly) labelMonthly.classList.toggle('active-label', !isYearly);
-            if (labelYearly) labelYearly.classList.toggle('active-label', isYearly);
+            window.billingIsYearly = !window.billingIsYearly;
+            billingToggle.classList.toggle('yearly', window.billingIsYearly);
+            if (labelMonthly) labelMonthly.classList.toggle('active-label', !window.billingIsYearly);
+            if (labelYearly) labelYearly.classList.toggle('active-label', window.billingIsYearly);
 
-            if (isYearly) {
-                if (proPrice) proPrice.textContent = '₹799';
+            if (window.billingIsYearly) {
+                if (proPrice) proPrice.textContent = '₹899';
                 if (proPeriod) proPeriod.textContent = '/year';
-                if (proYearlyNote) proYearlyNote.textContent = 'That\'s just ₹67/month';
+                if (proYearlyNote) proYearlyNote.textContent = 'That\'s just ₹75/month';
             } else {
                 if (proPrice) proPrice.textContent = '₹99';
                 if (proPeriod) proPeriod.textContent = '/month';

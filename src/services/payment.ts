@@ -16,58 +16,30 @@ function getRazorpay() {
   return instance;
 }
 
-let cachedPlanId: string | null = null;
-
-async function getPlanId(rzp: any) {
-  if (cachedPlanId) return cachedPlanId;
-  
-  try {
-    const plans = await rzp.plans.all();
-    const existing = plans.items.find((p: any) => p.item.name === "QuickPDF Pro Monthly");
-    if (existing) {
-        cachedPlanId = existing.id;
-        return cachedPlanId;
-    }
-    
-    const plan = await rzp.plans.create({
-        period: "monthly",
-        interval: 1,
-        item: {
-            name: "QuickPDF Pro Monthly",
-            amount: 9900,
-            currency: "INR",
-            description: "Unlimited PDF operations on WhatsApp"
-        }
-    });
-    cachedPlanId = plan.id;
-    return cachedPlanId;
-  } catch (err) {
-    console.error("Error fetching/creating Razorpay plan:", err);
-    throw err;
-  }
-}
-
-export async function createSubscription(phone: string) {
+export async function createOrder(phone: string, isYearly: boolean) {
   try {
     const rzp = getRazorpay();
-    const planId = await getPlanId(rzp);
+    const amount = isYearly ? 89900 : 9900; // 899 INR or 99 INR in paise
     
     const options = {
-      plan_id: planId,
-      total_count: 120, // 10 years
-      customer_notify: 1,
+      amount: amount,
+      currency: "INR",
+      receipt: `receipt_${phone.substring(0, 10)}_${Date.now()}`,
       notes: {
-        phone: phone // Crucial for webhook linking
+        phone: phone,
+        isYearly: isYearly ? "true" : "false"
       }
     };
-    const subscription = await rzp.subscriptions.create(options);
-    return subscription;
+    
+    const order = await rzp.orders.create(options);
+    return order;
   } catch (error) {
-    console.error("Failed to create Razorpay subscription", error);
+    console.error("Failed to create Razorpay order", error);
     throw error;
   }
 }
 
+// We leave cancelSubscription here just in case any old monthly subscribers want to cancel from WhatsApp
 export async function cancelSubscription(subscriptionId: string) {
   try {
     const rzp = getRazorpay();
@@ -99,7 +71,7 @@ export function verifySignature(orderId: string, paymentId: string, signature: s
   
   const generatedSignature = crypto
     .createHmac('sha256', secret)
-    .update(paymentId + "|" + orderId) // For subscriptions, Razorpay reverses the order! payment_id | subscription_id
+    .update(orderId + "|" + paymentId) // Standard format for Razorpay Orders
     .digest('hex');
     
   return generatedSignature === signature;

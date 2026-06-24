@@ -70,30 +70,23 @@ router.post('/razorpay', express.raw({ type: 'application/json' }), async (req, 
 
         const event = JSON.parse(rawBody);
 
-        if (event.event === 'subscription.charged') {
-            const subscriptionId = event.payload.subscription.entity.id;
-            const phone = event.payload.subscription.entity.notes.phone;
-            const status = event.payload.subscription.entity.status;
-            const planId = event.payload.subscription.entity.plan_id;
-            const currentPeriodEnd = new Date(event.payload.subscription.entity.current_end * 1000).toISOString();
-
-            if (phone) {
-                await database.updateSubscription(phone, subscriptionId, status, planId, currentPeriodEnd);
-                
-                // If it's a first time charge, we might want to welcome them
-                // Wait to see if they're already in our DB with active, otherwise welcome them.
-                console.log(`Updated subscription for ${phone} to ${status}`);
+        if (event.event === 'order.paid') {
+            const orderId = event.payload.payment.entity.order_id;
+            const phone = event.payload.payment.entity.notes.phone;
+            const isYearly = event.payload.payment.entity.notes.isYearly === "true";
+            const status = "active";
+            const planId = isYearly ? "yearly_pass" : "monthly_pass";
+            
+            const endDate = new Date();
+            if (isYearly) {
+                endDate.setFullYear(endDate.getFullYear() + 1);
+            } else {
+                endDate.setMonth(endDate.getMonth() + 1);
             }
-        } else if (event.event === 'subscription.cancelled' || event.event === 'subscription.halted') {
-            const subscriptionId = event.payload.subscription.entity.id;
-            const phone = event.payload.subscription.entity.notes.phone;
-            const status = event.payload.subscription.entity.status; // typically 'cancelled'
-            const planId = event.payload.subscription.entity.plan_id;
-            const currentPeriodEnd = new Date(event.payload.subscription.entity.current_end * 1000).toISOString();
 
             if (phone) {
-                await database.updateSubscription(phone, subscriptionId, status, planId, currentPeriodEnd);
-                console.log(`Subscription for ${phone} was cancelled.`);
+                await database.updateSubscription(phone, orderId, status, planId, endDate.toISOString());
+                console.log(`Updated one-time pass for ${phone} to ${status} until ${endDate.toISOString()}`);
             }
         }
 

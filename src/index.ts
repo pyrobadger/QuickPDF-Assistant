@@ -6,7 +6,7 @@ import type { Request, Response } from "express";
 import path from 'path';
 import { fileURLToPath } from 'url';
 import webhookRoutes from './routes/webhook.js';
-import { createSubscription, verifySignature } from './services/payment.js';
+import { createOrder, verifySignature } from './services/payment.js';
 import crypto from 'crypto';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -34,9 +34,9 @@ app.use('/webhook', webhookRoutes);
 
 import * as database from './services/database.js';
 
-app.post('/api/create-subscription', async (req: Request, res: Response): Promise<void> => {
+app.post('/api/create-order', async (req: Request, res: Response): Promise<void> => {
     try {
-        let { phone } = req.body;
+        let { phone, isYearly } = req.body;
         if (!phone) {
             res.status(400).json({ error: 'WhatsApp number is required' });
             return;
@@ -56,23 +56,23 @@ app.post('/api/create-subscription', async (req: Request, res: Response): Promis
             return;
         }
 
-        const subscription = await createSubscription(phone);
+        const order = await createOrder(phone, !!isYearly);
 
         res.json({
-            subscription_id: subscription.id,
+            order_id: order.id,
             key_id: process.env.RAZORPAY_KEY_ID, // Dynamic key
         });
     } catch (error: any) {
-        console.error('Create subscription error:', error);
-        res.status(500).json({ error: 'Failed to create subscription: ' + (error.message || JSON.stringify(error)) });
+        console.error('Create order error:', error);
+        res.status(500).json({ error: 'Failed to create order: ' + (error.message || JSON.stringify(error)) });
     }
 });
 
-app.post('/api/verify-payment', (req: Request, res: Response): void => {
+app.post('/api/verify-payment', async (req: Request, res: Response): Promise<void> => {
     try {
-        const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+        const { phone, isYearly, razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
 
-        if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+        if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature || !phone) {
             res.status(400).json({ error: 'Missing required payment fields' });
             return;
         }
@@ -80,8 +80,22 @@ app.post('/api/verify-payment', (req: Request, res: Response): void => {
         const isValid = verifySignature(razorpay_order_id, razorpay_payment_id, razorpay_signature);
 
         if (isValid) {
-            // Note: Currently marking as valid but not activating a specific subscription
-            // since this is the standard order checkout flow.
+            // Update the database instantly for immediate access
+            const endDate = new Date();
+            if (isYearly) {
+                endDate.setFullYear(endDate.getFullYear() + 1);
+            } else {
+                endDate.setMonth(endDate.getMonth() + 1);
+            }
+            
+            await database.updateSubscription(
+                phone, 
+                razorpay_order_id, 
+                'active', 
+                isYearly ? 'yearly_pass' : 'monthly_pass', 
+                endDate.toISOString()
+            );
+
             res.json({ success: true, message: 'Payment verified successfully' });
         } else {
             res.status(400).json({ error: 'Invalid signature' });

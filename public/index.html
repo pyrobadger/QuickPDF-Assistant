@@ -462,7 +462,8 @@
                     <li><i class="ph-bold ph-star star"></i><span>Everything in Free, with <strong>zero
                                 limits*</strong></span></li>
                 </ul>
-                <button onclick="openRazorpayCheckout()" class="pricing-cta filled" style="width: 100%; border: none; cursor: pointer; font-family: inherit; font-size: 16px;">
+                <button onclick="openRazorpayCheckout()" class="pricing-cta filled"
+                    style="width: 100%; border: none; cursor: pointer; font-family: inherit; font-size: 16px;">
                     Upgrade Now
                     <i class="ph-bold ph-arrow-right"></i>
                 </button>
@@ -506,7 +507,7 @@
         </div>
         <div class="blog-grid" style="padding: 0; margin-bottom: 40px; border: none; background: transparent;">
             <article class="blog-card">
-                
+
                 <div class="blog-card-body">
                     <h2><a href="/blog/merge-pdf-mobile.html">How to Merge PDF Files on Mobile</a></h2>
                     <p class="blog-meta">5 min read</p>
@@ -518,18 +519,19 @@
             </article>
 
             <article class="blog-card">
-                
+
                 <div class="blog-card-body">
                     <h2><a href="/blog/whatsapp-document-management.html">WhatsApp for Document Management</a></h2>
                     <p class="blog-meta">6 min read</p>
-                    <p class="blog-excerpt">Your most used app just became your document manager. See how WhatsApp is changing PDF handling.</p>
+                    <p class="blog-excerpt">Your most used app just became your document manager. See how WhatsApp is
+                        changing PDF handling.</p>
                     <a href="/blog/whatsapp-document-management.html" class="read-more">Read More <i
                             class="ph-bold ph-arrow-right"></i></a>
                 </div>
             </article>
 
             <article class="blog-card">
-                
+
                 <div class="blog-card-body">
                     <h2><a href="/blog/pdf-security-encryption.html">Secure PDF Protection Guide</a></h2>
                     <p class="blog-meta">5 min read</p>
@@ -698,7 +700,7 @@
                         </li>
                     </ul>
                 </div>
-                
+
                 <!-- Right Side: Checkout Form -->
                 <div class="upgrade-modal-form-side">
                     <div class="upgrade-modal-header">
@@ -706,14 +708,15 @@
                         <h2>Upgrade your account</h2>
                         <p>Link your WhatsApp number to activate Pro features instantly.</p>
                     </div>
-                    
+
                     <div class="upgrade-form-group">
                         <label for="whatsapp-input">WhatsApp Number</label>
-                        <input type="tel" id="whatsapp-input" class="upgrade-input" placeholder="e.g. +919876543210" autocomplete="tel">
+                        <input type="tel" id="whatsapp-input" class="upgrade-input" placeholder="e.g. +919876543210"
+                            autocomplete="tel">
                     </div>
-                    
+
                     <p style="font-size: 11px; color: var(--color-text-muted); margin-bottom: 20px; line-height: 1.4;">
-                        <strong>Note:</strong> Due to RBI e-mandate guidelines, the Razorpay checkout will show an end date of 2036 (10 years). This is just a compliance requirement—you will only be billed monthly and can cancel at any time.
+                        <strong>Note:</strong> This is a secure one-time payment. No automatic deductions will be made.
                     </p>
 
                     <button class="btn-upgrade-submit" id="btn-continue-checkout" onclick="continueToCheckout()">
@@ -753,15 +756,15 @@
                 submitBtn.disabled = true;
                 submitBtn.innerHTML = 'Processing... <i class="ph ph-spinner ph-spin"></i>';
 
-                // 1. Create Subscription
-                const subResponse = await fetch('/api/create-subscription', {
+                // 1. Create Order
+                const subResponse = await fetch('/api/create-order', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ phone: phone })
+                    body: JSON.stringify({ phone: phone, isYearly: window.billingIsYearly })
                 });
-                
+
                 const subData = await subResponse.json();
-                
+
                 if (!subResponse.ok) {
                     if (subData.error === 'ALREADY_SUBSCRIBED') {
                         alert(subData.message);
@@ -777,8 +780,8 @@
                 const options = {
                     key: subData.key_id, // Fetch key dynamically from backend
                     name: "QuickPDF Pro",
-                    description: "Unlimited PDF Operations",
-                    subscription_id: subData.subscription_id,
+                    description: window.billingIsYearly ? "1 Year Pass" : "1 Month Pass",
+                    order_id: subData.order_id,
                     handler: async function (response) {
                         // 3. Verify Payment
                         submitBtn.innerHTML = 'Verifying...';
@@ -786,12 +789,14 @@
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
+                                phone: phone,
+                                isYearly: window.billingIsYearly,
                                 razorpay_payment_id: response.razorpay_payment_id,
-                                razorpay_order_id: response.razorpay_subscription_id, // For subscriptions
+                                razorpay_order_id: response.razorpay_order_id,
                                 razorpay_signature: response.razorpay_signature
                             })
                         });
-                        
+
                         const verifyData = await verifyRes.json();
                         if (verifyRes.ok) {
                             alert('Payment successful! Your QuickPDF Pro is now active. You can now use all Pro features in WhatsApp!');
@@ -803,7 +808,7 @@
                         }
                     },
                     modal: {
-                        ondismiss: function() {
+                        ondismiss: function () {
                             submitBtn.disabled = false;
                             submitBtn.innerHTML = 'Continue to Payment';
                         }
@@ -812,15 +817,15 @@
                         color: "#6c5ce7"
                     }
                 };
-                
+
                 const rzp = new Razorpay(options);
-                rzp.on('payment.failed', function (response){
+                rzp.on('payment.failed', function (response) {
                     alert('Payment failed: ' + response.error.description);
                     submitBtn.disabled = false;
                     submitBtn.innerHTML = 'Continue to Payment';
                 });
                 rzp.open();
-                
+
             } catch (error) {
                 console.error(error);
                 alert('Something went wrong during checkout initialization.');
