@@ -60,7 +60,7 @@ app.post('/api/create-subscription', async (req: Request, res: Response): Promis
 
         res.json({
             subscription_id: subscription.id,
-            // Subscriptions do not return 'amount' in the same way, the frontend just needs the ID
+            key_id: process.env.RAZORPAY_KEY_ID, // Dynamic key
         });
     } catch (error: any) {
         console.error('Create subscription error:', error);

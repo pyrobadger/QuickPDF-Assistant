@@ -775,7 +775,7 @@
 
                 // 2. Open Razorpay Checkout
                 const options = {
-                    key: "rzp_test_T5PKINkaID28nW", // Safe to expose public key
+                    key: subData.key_id, // Fetch key dynamically from backend
                     name: "QuickPDF Pro",
                     description: "Unlimited PDF Operations",
                     subscription_id: subData.subscription_id,
