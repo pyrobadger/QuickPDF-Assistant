@@ -2,8 +2,7 @@ import NodeCache from 'node-cache';
 
 // Cache keys expire after 15 minutes (900 seconds) of inactivity
 const sessionCache = new NodeCache({ stdTTL: 900, checkperiod: 120 });
-// Daily limits cache (24 hours)
-const dailyLimitCache = new NodeCache({ stdTTL: 86400, checkperiod: 3600 });
+// Daily limits cache removed - migrated to database
 // Long-lived cache for tracking seen users (30 days = 2592000 seconds)
 const seenUserCache = new NodeCache({ stdTTL: 2592000, checkperiod: 86400 });
 
@@ -38,16 +37,7 @@ class SessionService {
         sessionCache.del(phoneNumber);
     }
 
-    incrementDailyUsage(phoneNumber: string): number {
-        let usage = dailyLimitCache.get<number>(phoneNumber) || 0;
-        usage += 1;
-        dailyLimitCache.set(phoneNumber, usage);
-        return usage;
-    }
 
-    getDailyUsage(phoneNumber: string): number {
-        return dailyLimitCache.get<number>(phoneNumber) || 0;
-    }
 
     isFirstTimeUser(phoneNumber: string): boolean {
         const hasSeen = seenUserCache.get<boolean>(phoneNumber);

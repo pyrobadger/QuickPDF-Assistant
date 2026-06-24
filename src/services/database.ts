@@ -126,3 +126,111 @@ export async function logDocumentStats(phone: string, action: string, inputCount
     console.error('Failed to log document stats to Supabase:', error);
   }
 }
+
+/**
+ * Get daily usage count for a user based on successful interactions today
+ * @param {string} phone
+ */
+export async function getDailyUsage(phone: string): Promise<number> {
+  try {
+    const client = getSupabase();
+    // Get start of today in UTC
+    const startOfDay = new Date();
+    startOfDay.setUTCHours(0, 0, 0, 0);
+
+    const { count, error } = await client
+      .from('interactions')
+      .select('*', { count: 'exact', head: true })
+      .eq('phone', phone)
+      .eq('status', 'success')
+      .gte('timestamp', startOfDay.toISOString());
+
+    if (error) throw error;
+    return count || 0;
+  } catch (error) {
+    console.error('Failed to get daily usage:', error);
+    return 0; // Fallback to 0 if db fails
+  }
+}
+
+/**
+ * Check if a user has an active Pro subscription
+ * @param {string} phone
+ */
+export async function isUserPro(phone: string): Promise<boolean> {
+  try {
+    const client = getSupabase();
+    const { data, error } = await client
+      .from('subscriptions')
+      .select('status, current_period_end')
+      .eq('phone', phone)
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') return false; // No rows found
+      throw error;
+    }
+
+    if (data && data.status === 'active') {
+      // Check if period end is in the future
+      if (new Date(data.current_period_end) > new Date()) {
+        return true;
+      }
+    }
+    return false;
+  } catch (error) {
+    console.error('Failed to check user pro status:', error);
+    return false;
+  }
+}
+
+/**
+ * Upsert a subscription record
+ */
+export async function updateSubscription(phone: string, subscriptionId: string, status: string, planId: string, currentPeriodEnd: string) {
+  try {
+    const client = getSupabase();
+    const { error } = await client
+      .from('subscriptions')
+      .upsert({
+          phone: phone,
+          subscription_id: subscriptionId,
+          status: status,
+          plan_id: planId,
+          current_period_end: currentPeriodEnd,
+          updated_at: new Date().toISOString()
+      }, { onConflict: 'phone' });
+
+    if (error) {
+      console.error('Supabase update error:', error);
+      throw error;
+    }
+  } catch (error) {
+    console.error('Failed to update subscription:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get active subscription ID for a user
+ */
+export async function getSubscriptionId(phone: string): Promise<string | null> {
+  try {
+    const client = getSupabase();
+    const { data, error } = await client
+      .from('subscriptions')
+      .select('subscription_id')
+      .eq('phone', phone)
+      .eq('status', 'active')
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') return null;
+      throw error;
+    }
+    return data?.subscription_id || null;
+  } catch (error) {
+    console.error('Failed to get subscription id:', error);
+    return null;
+  }
+}

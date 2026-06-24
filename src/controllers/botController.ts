@@ -33,6 +33,34 @@ class BotController {
                     return;
                 }
 
+                if (text === 'account' || text === 'pro' || text === 'plan') {
+                    const isPro = await database.isUserPro(from);
+                    const usage = await database.getDailyUsage(from);
+                    if (isPro) {
+                        await whatsappService.sendTextMessage(from, `🌟 *QuickPDF Pro Account*\n\nStatus: Active ✅\nDaily Usage: ${usage} operations\n\nThank you for supporting QuickPDF! To manage your subscription, type "cancel".`);
+                    } else {
+                        await whatsappService.sendTextMessage(from, `👤 *QuickPDF Free Account*\n\nStatus: Freemium\nDaily Usage: ${usage}/10 operations used today.\n\nWant unlimited usage and 100MB file limits? Upgrade to Pro at https://quickpdfassistant.in 🚀`);
+                    }
+                    return;
+                }
+
+                if (text === 'cancel' || text === 'unsubscribe') {
+                    const subId = await database.getSubscriptionId(from);
+                    if (!subId) {
+                        await whatsappService.sendTextMessage(from, 'ℹ️ You do not have an active QuickPDF Pro subscription to cancel.');
+                        return;
+                    }
+                    try {
+                        const { cancelSubscription } = await import('../services/payment.js');
+                        await cancelSubscription(subId);
+                        await whatsappService.sendTextMessage(from, '✅ Your QuickPDF Pro subscription has been successfully cancelled. You will not be charged again.\n\nYou will continue to have access to Pro features until the end of your current billing cycle.');
+                    } catch (e) {
+                        console.error('Error cancelling subscription:', e);
+                        await whatsappService.sendTextMessage(from, '⚠️ Failed to cancel subscription. Please contact support or cancel via the Razorpay email receipt.');
+                    }
+                    return;
+                }
+
                 // Handle text inputs based on state
                 await this.handleTextState(from, text, session);
             }
@@ -110,10 +138,13 @@ class BotController {
         // Log menu selection
         await database.logInteraction(from, 'menu_selection', { selectedId: actionId });
 
-        const usage = sessionService.getDailyUsage(from);
-        if (usage >= 5) {
-            await whatsappService.sendTextMessage(from, '⏳ You have reached the free beta limit of 5 operations per day. Please try again tomorrow. 🌛');
-            return;
+        const isPro = await database.isUserPro(from);
+        if (!isPro) {
+            const usage = await database.getDailyUsage(from);
+            if (usage >= 10) {
+                await whatsappService.sendTextMessage(from, '⏳ You have reached the free tier limit of 10 operations per day. Upgrade to QuickPDF Pro for unlimited operations at https://quickpdfassistant.in 🚀');
+                return;
+            }
         }
 
         if (actionId === 'action_merge_done') {
@@ -365,16 +396,29 @@ class BotController {
                 const basename = path.basename(document.filename, path.extname(document.filename));
                 session.metadata.originalName = basename;
             }
-            // Check file size: 10 MiB for images, 40 MiB for other documents
+            // Check file size: 10/40MB for free, 100MB for pro
             const imageMimes = ['image/jpeg', 'image/png'];
             const isImage = imageMimes.includes(document.mime_type);
-            const FILE_SIZE_LIMIT = isImage ? 10 * 1024 * 1024 : 40 * 1024 * 1024;
+            const isPro = await database.isUserPro(from);
+            
+            let FILE_SIZE_LIMIT = isImage ? 10 * 1024 * 1024 : 40 * 1024 * 1024;
+            if (isPro) {
+                FILE_SIZE_LIMIT = 100 * 1024 * 1024; // 100MB for all types
+            }
+            
             const stats = await fs.stat(localPath);
             if (stats.size > FILE_SIZE_LIMIT) {
                 await fs.unlink(localPath).catch(() => { });
-                const limitMsg = isImage
+                let limitMsg = isImage
                     ? '⚠️ File is too large! The freemium plan limits images to 10 MB. 📉'
                     : '⚠️ File is too large! The freemium plan limits documents to 40 MB. 📉';
+                
+                if (isPro) {
+                    limitMsg = '⚠️ File is too large! Even on Pro, the WhatsApp limit is 100MB per file. 📉';
+                } else {
+                    limitMsg += '\n\nUpgrade to QuickPDF Pro for 100MB limits! 🚀 https://quickpdfassistant.in';
+                }
+                
                 await whatsappService.sendTextMessage(from, limitMsg);
                 return;
             }
@@ -571,7 +615,7 @@ class BotController {
 
             await database.logDocumentStats(to, action, inputDocumentCount, outputDocumentCount);
 
-            const usage = sessionService.incrementDailyUsage(to);
+            const usage = await database.getDailyUsage(to);
             console.log(`User ${to} has used ${usage} operations today.`);
 
             console.log(`Uploading processed file to WhatsApp: ${filePath}`);

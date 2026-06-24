@@ -1,5 +1,7 @@
 import express from 'express';
 import botController from '../controllers/botController.js';
+import { verifyWebhookSignature } from '../services/payment.js';
+import * as database from '../services/database.js';
 
 const router = express.Router();
 
@@ -9,11 +11,6 @@ router.get('/', (req, res) => {
     const mode = req.query['hub.mode'];
     const token = req.query['hub.verify_token'];
     const challenge = req.query['hub.challenge'];
-    //temp
-    console.log('MODE:', mode);
-    console.log('TOKEN RECEIVED:', token);
-    console.log('ENV TOKEN:', process.env.VERIFY_TOKEN);
-    console.log('MATCH:', token === process.env.VERIFY_TOKEN);
 
     if (mode && token) {
         if (mode === 'subscribe' && token === process.env.VERIFY_TOKEN) {
@@ -56,6 +53,54 @@ router.post('/', async (req, res) => {
         }
     } else {
         res.sendStatus(404);
+    }
+});
+
+// Razorpay Webhooks (POST)
+// Note: In index.ts, we bypass express.json() for this route so we can read the raw body for signature verification
+router.post('/razorpay', express.raw({ type: 'application/json' }), async (req, res) => {
+    try {
+        const signature = req.headers['x-razorpay-signature'] as string;
+        const rawBody = req.body.toString('utf8');
+
+        if (!verifyWebhookSignature(rawBody, signature)) {
+            res.status(400).json({ error: 'Invalid signature' });
+            return;
+        }
+
+        const event = JSON.parse(rawBody);
+
+        if (event.event === 'subscription.charged') {
+            const subscriptionId = event.payload.subscription.entity.id;
+            const phone = event.payload.subscription.entity.notes.phone;
+            const status = event.payload.subscription.entity.status;
+            const planId = event.payload.subscription.entity.plan_id;
+            const currentPeriodEnd = new Date(event.payload.subscription.entity.current_end * 1000).toISOString();
+
+            if (phone) {
+                await database.updateSubscription(phone, subscriptionId, status, planId, currentPeriodEnd);
+                
+                // If it's a first time charge, we might want to welcome them
+                // Wait to see if they're already in our DB with active, otherwise welcome them.
+                console.log(`Updated subscription for ${phone} to ${status}`);
+            }
+        } else if (event.event === 'subscription.cancelled' || event.event === 'subscription.halted') {
+            const subscriptionId = event.payload.subscription.entity.id;
+            const phone = event.payload.subscription.entity.notes.phone;
+            const status = event.payload.subscription.entity.status; // typically 'cancelled'
+            const planId = event.payload.subscription.entity.plan_id;
+            const currentPeriodEnd = new Date(event.payload.subscription.entity.current_end * 1000).toISOString();
+
+            if (phone) {
+                await database.updateSubscription(phone, subscriptionId, status, planId, currentPeriodEnd);
+                console.log(`Subscription for ${phone} was cancelled.`);
+            }
+        }
+
+        res.json({ status: 'ok' });
+    } catch (error) {
+        console.error('Webhook processing error:', error);
+        res.status(500).json({ error: 'Webhook processing failed' });
     }
 });
 

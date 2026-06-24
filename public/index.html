@@ -462,10 +462,10 @@
                     <li><i class="ph-bold ph-star star"></i><span>Everything in Free, with <strong>zero
                                 limits*</strong></span></li>
                 </ul>
-                <a href="#waitlist" class="pricing-cta filled">
-                    We're working on it
+                <button onclick="openRazorpayCheckout()" class="pricing-cta filled" style="width: 100%; border: none; cursor: pointer; font-family: inherit; font-size: 16px;">
+                    Upgrade Now
                     <i class="ph-bold ph-arrow-right"></i>
-                </a>
+                </button>
                 <p
                     style="margin-top: 16px; font-size: 11px; color: var(--color-text-muted); line-height: 1.4; text-align: center;">
                     *Subject to Fair Usage Policy to prevent bot abuse and ensure server stability.
@@ -650,6 +650,185 @@
     <!-- Smooth Scroll (Lenis) -->
     <script src="https://unpkg.com/lenis@1.1.20/dist/lenis.min.js"></script>
 
+    <!-- Custom Upgrade Modal -->
+    <div class="upgrade-modal-overlay" id="upgrade-modal">
+        <div class="upgrade-modal-container">
+            <button class="upgrade-modal-close" onclick="closeUpgradeModal()" aria-label="Close modal">
+                <i class="ph ph-x"></i>
+            </button>
+            <div class="upgrade-modal-body">
+                <!-- Left Side: Features -->
+                <div class="upgrade-modal-features">
+                    <h3>What's included</h3>
+                    <ul class="upgrade-feature-list">
+                        <li class="upgrade-feature-item">
+                            <i class="ph-bold ph-check"></i>
+                            <div class="upgrade-feature-text">
+                                <strong>Unlimited operations</strong>
+                                <span>Process as many PDFs as you need per day</span>
+                            </div>
+                        </li>
+                        <li class="upgrade-feature-item">
+                            <i class="ph-bold ph-check"></i>
+                            <div class="upgrade-feature-text">
+                                <strong>100MB file limit</strong>
+                                <span>Perfect for large presentations and reports</span>
+                            </div>
+                        </li>
+                        <li class="upgrade-feature-item">
+                            <i class="ph-bold ph-check"></i>
+                            <div class="upgrade-feature-text">
+                                <strong>Unlimited images to PDF</strong>
+                                <span>Combine hundreds of images into one file</span>
+                            </div>
+                        </li>
+                        <li class="upgrade-feature-item">
+                            <i class="ph-bold ph-check"></i>
+                            <div class="upgrade-feature-text">
+                                <strong>Priority Processing</strong>
+                                <span>Skip the queue during peak hours</span>
+                            </div>
+                        </li>
+                        <li class="upgrade-feature-item">
+                            <i class="ph-bold ph-check"></i>
+                            <div class="upgrade-feature-text">
+                                <strong>Cancel anytime</strong>
+                                <span>No hidden fees, flexible monthly billing</span>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+                
+                <!-- Right Side: Checkout Form -->
+                <div class="upgrade-modal-form-side">
+                    <div class="upgrade-modal-header">
+                        <span class="upgrade-badge">QuickPDF Pro</span>
+                        <h2>Upgrade your account</h2>
+                        <p>Link your WhatsApp number to activate Pro features instantly.</p>
+                    </div>
+                    
+                    <div class="upgrade-form-group">
+                        <label for="whatsapp-input">WhatsApp Number</label>
+                        <input type="tel" id="whatsapp-input" class="upgrade-input" placeholder="e.g. +919876543210" autocomplete="tel">
+                    </div>
+                    
+                    <p style="font-size: 11px; color: var(--color-text-muted); margin-bottom: 20px; line-height: 1.4;">
+                        <strong>Note:</strong> Due to RBI e-mandate guidelines, the Razorpay checkout will show an end date of 2036 (10 years). This is just a compliance requirement—you will only be billed monthly and can cancel at any time.
+                    </p>
+
+                    <button class="btn-upgrade-submit" id="btn-continue-checkout" onclick="continueToCheckout()">
+                        Continue to Payment
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <script>
+        function openRazorpayCheckout() {
+            // Show the custom modal instead of prompt
+            document.getElementById('upgrade-modal').classList.add('active');
+            document.getElementById('whatsapp-input').focus();
+        }
+
+        function closeUpgradeModal() {
+            document.getElementById('upgrade-modal').classList.remove('active');
+            document.getElementById('whatsapp-input').value = '';
+        }
+
+        async function continueToCheckout() {
+            const phoneInput = document.getElementById('whatsapp-input');
+            const submitBtn = document.getElementById('btn-continue-checkout');
+            const phone = phoneInput.value.trim();
+
+            if (!phone) {
+                alert("Please enter your WhatsApp number to link your Pro account.");
+                phoneInput.focus();
+                return;
+            }
+
+            try {
+                // Disable button and show loading state
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = 'Processing... <i class="ph ph-spinner ph-spin"></i>';
+
+                // 1. Create Subscription
+                const subResponse = await fetch('/api/create-subscription', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phone: phone })
+                });
+                
+                const subData = await subResponse.json();
+                
+                if (!subResponse.ok) {
+                    if (subData.error === 'ALREADY_SUBSCRIBED') {
+                        alert(subData.message);
+                    } else {
+                        alert('Error creating subscription: ' + (subData.error || 'Unknown error'));
+                    }
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = 'Continue to Payment';
+                    return;
+                }
+
+                // 2. Open Razorpay Checkout
+                const options = {
+                    key: "rzp_test_T5PKINkaID28nW", // Safe to expose public key
+                    name: "QuickPDF Pro",
+                    description: "Unlimited PDF Operations",
+                    subscription_id: subData.subscription_id,
+                    handler: async function (response) {
+                        // 3. Verify Payment
+                        submitBtn.innerHTML = 'Verifying...';
+                        const verifyRes = await fetch('/api/verify-payment', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                razorpay_payment_id: response.razorpay_payment_id,
+                                razorpay_order_id: response.razorpay_subscription_id, // For subscriptions
+                                razorpay_signature: response.razorpay_signature
+                            })
+                        });
+                        
+                        const verifyData = await verifyRes.json();
+                        if (verifyRes.ok) {
+                            alert('Payment successful! Your QuickPDF Pro is now active. You can now use all Pro features in WhatsApp!');
+                            closeUpgradeModal();
+                        } else {
+                            alert('Payment verification failed: ' + verifyData.error);
+                            submitBtn.disabled = false;
+                            submitBtn.innerHTML = 'Continue to Payment';
+                        }
+                    },
+                    modal: {
+                        ondismiss: function() {
+                            submitBtn.disabled = false;
+                            submitBtn.innerHTML = 'Continue to Payment';
+                        }
+                    },
+                    theme: {
+                        color: "#6c5ce7"
+                    }
+                };
+                
+                const rzp = new Razorpay(options);
+                rzp.on('payment.failed', function (response){
+                    alert('Payment failed: ' + response.error.description);
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = 'Continue to Payment';
+                });
+                rzp.open();
+                
+            } catch (error) {
+                console.error(error);
+                alert('Something went wrong during checkout initialization.');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = 'Continue to Payment';
+            }
+        }
+    </script>
 </body>
 
 </html>

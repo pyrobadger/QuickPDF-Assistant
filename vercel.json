@@ -1,4 +1,9 @@
 {
-    "rewrites": [],
+    "rewrites": [
+        {
+            "source": "/api/:match*",
+            "destination": "http://64.227.144.9:3000/api/:match*"
+        }
+    ],
     "cleanUrls": true
 }
