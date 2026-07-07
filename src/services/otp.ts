@@ -20,10 +20,15 @@ class OtpService {
         
         console.log(`[OTP Service] Generated OTP ${code} for phone: ${phone}`);
         
-        const message = `🔐 Your QuickPDF Pro verification code is: *${code}*\n\nThis code is valid for 5 minutes. Do not share this code with anyone.`;
+        // 1. Try sending via Approved Meta Template 'quickpdf_otp'
+        const templateSent = await whatsappService.sendTemplateMessage(phone, 'quickpdf_otp', 'en', [code], [code]);
         
-        // Send via WhatsApp
-        await whatsappService.sendTextMessage(phone, message);
+        // 2. If template failed (e.g. still in review or not found), fallback to standard text message
+        if (!templateSent) {
+            console.log(`[OTP Service] Template 'quickpdf_otp' failed or pending approval. Falling back to standard text message...`);
+            const message = `🔐 Your QuickPDF Pro verification code is: *${code}*\n\nThis code is valid for 5 minutes. Do not share this code with anyone.`;
+            await whatsappService.sendTextMessage(phone, message);
+        }
     }
 
     /**

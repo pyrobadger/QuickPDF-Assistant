@@ -25,6 +25,68 @@ class WhatsAppService {
             console.error('Failed to send text message:', error.response ? error.response.data : error.message);
         }
     }
+    async sendTemplateMessage(to, templateName, languageCode = 'en', bodyVariables = [], buttonVariables = []) {
+        try {
+            const components = [];
+            if (bodyVariables.length > 0) {
+                components.push({
+                    type: 'body',
+                    parameters: bodyVariables.map(val => ({
+                        type: 'text',
+                        text: val
+                    }))
+                });
+            }
+            if (buttonVariables.length > 0) {
+                components.push({
+                    type: 'button',
+                    sub_type: 'url',
+                    index: '0',
+                    parameters: buttonVariables.map(val => ({
+                        type: 'text',
+                        text: val
+                    }))
+                });
+            }
+            await axios({
+                method: 'POST',
+                url: `${BASE_URL}${process.env.PHONE_NUMBER_ID}/messages`,
+                data: {
+                    messaging_product: 'whatsapp',
+                    to: to,
+                    type: 'template',
+                    template: {
+                        name: templateName,
+                        language: {
+                            code: languageCode
+                        },
+                        ...(components.length > 0 && { components })
+                    }
+                },
+                headers: getHeaders()
+            });
+            console.log(`[WhatsAppService] Successfully sent template '${templateName}' to ${to} (lang: ${languageCode})`);
+            return true;
+        }
+        catch (error) {
+            console.error(`[WhatsAppService] Failed to send template '${templateName}' (lang: ${languageCode}):`, error.response ? JSON.stringify(error.response.data) : error.message);
+            // If we tried sending buttonVariables and it failed (e.g. template doesn't expect button component), retry without button component
+            if (buttonVariables.length > 0) {
+                console.log(`[WhatsAppService] Retrying template '${templateName}' without button component...`);
+                return await this.sendTemplateMessage(to, templateName, languageCode, bodyVariables, []);
+            }
+            // If languageCode was 'en' and failed, maybe it was created as 'en_US' or 'en_GB'
+            if (languageCode === 'en') {
+                console.log(`[WhatsAppService] Retrying template '${templateName}' with language code 'en_US'...`);
+                return await this.sendTemplateMessage(to, templateName, 'en_US', bodyVariables, []);
+            }
+            else if (languageCode === 'en_US') {
+                console.log(`[WhatsAppService] Retrying template '${templateName}' with language code 'en_GB'...`);
+                return await this.sendTemplateMessage(to, templateName, 'en_GB', bodyVariables, []);
+            }
+            return false;
+        }
+    }
     async sendListMessage(to, bodyText, buttonText, sections, title = 'Menu') {
         try {
             await axios({
