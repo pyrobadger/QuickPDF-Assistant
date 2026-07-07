@@ -81,13 +81,16 @@ class WhatsAppService {
                 return await this.sendTemplateMessage(to, templateName, languageCode, bodyVariables, []);
             }
             
-            // If languageCode was 'en' and failed, maybe it was created as 'en_US' or 'en_GB'
+            // If languageCode was 'en' and failed, maybe it was created as 'en_US', 'en_GB', or 'en_IN'
             if (languageCode === 'en') {
                 console.log(`[WhatsAppService] Retrying template '${templateName}' with language code 'en_US'...`);
                 return await this.sendTemplateMessage(to, templateName, 'en_US', bodyVariables, []);
             } else if (languageCode === 'en_US') {
                 console.log(`[WhatsAppService] Retrying template '${templateName}' with language code 'en_GB'...`);
                 return await this.sendTemplateMessage(to, templateName, 'en_GB', bodyVariables, []);
+            } else if (languageCode === 'en_GB') {
+                console.log(`[WhatsAppService] Retrying template '${templateName}' with language code 'en_IN'...`);
+                return await this.sendTemplateMessage(to, templateName, 'en_IN', bodyVariables, []);
             }
             
             return false;
