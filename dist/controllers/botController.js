@@ -26,6 +26,34 @@ class BotController {
                     await this.sendMainMenu(from);
                     return;
                 }
+                if (text === 'account' || text === 'pro' || text === 'plan') {
+                    const isPro = await database.isUserPro(from);
+                    const usage = await database.getDailyUsage(from);
+                    if (isPro) {
+                        await whatsappService.sendTextMessage(from, `🌟 *QuickPDF Pro Account*\n\nStatus: Active ✅\nDaily Usage: ${usage} operations\n\nThank you for supporting QuickPDF! To manage your subscription, type "cancel".`);
+                    }
+                    else {
+                        await whatsappService.sendTextMessage(from, `👤 *QuickPDF Free Account*\n\nStatus: Freemium\nDaily Usage: ${usage}/10 operations used today.\n\nWant unlimited usage and 100MB file limits? Upgrade to Pro at https://quickpdfassistant.in 🚀`);
+                    }
+                    return;
+                }
+                if (text === 'cancel' || text === 'unsubscribe') {
+                    const subId = await database.getSubscriptionId(from);
+                    if (!subId) {
+                        await whatsappService.sendTextMessage(from, 'ℹ️ You do not have an active QuickPDF Pro subscription to cancel.');
+                        return;
+                    }
+                    try {
+                        const { cancelSubscription } = await import('../services/payment.js');
+                        await cancelSubscription(subId);
+                        await whatsappService.sendTextMessage(from, '✅ Your QuickPDF Pro subscription has been successfully cancelled. You will not be charged again.\n\nYou will continue to have access to Pro features until the end of your current billing cycle.');
+                    }
+                    catch (e) {
+                        console.error('Error cancelling subscription:', e);
+                        await whatsappService.sendTextMessage(from, '⚠️ Failed to cancel subscription. Please contact support or cancel via the Razorpay email receipt.');
+                    }
+                    return;
+                }
                 // Handle text inputs based on state
                 await this.handleTextState(from, text, session);
             }
@@ -98,10 +126,13 @@ class BotController {
         console.log(`User ${from} selected action: ${actionId}`);
         // Log menu selection
         await database.logInteraction(from, 'menu_selection', { selectedId: actionId });
-        const usage = sessionService.getDailyUsage(from);
-        if (usage >= 5) {
-            await whatsappService.sendTextMessage(from, '⏳ You have reached the free beta limit of 5 operations per day. Please try again tomorrow. 🌛');
-            return;
+        const isPro = await database.isUserPro(from);
+        if (!isPro) {
+            const usage = await database.getDailyUsage(from);
+            if (usage >= 10) {
+                await whatsappService.sendTextMessage(from, '⏳ You have reached the free tier limit of 10 operations per day. Upgrade to QuickPDF Pro for unlimited operations at https://quickpdfassistant.in 🚀');
+                return;
+            }
         }
         if (actionId === 'action_merge_done') {
             if (session.action === 'menu_merge' && session.files.length >= 2) {
@@ -208,7 +239,7 @@ class BotController {
                 const inputPath = session.files[0];
                 const outputPath = path.join('/tmp', `${crypto.randomUUID()}_split.pdf`);
                 await pdfWorker.splitPdf(inputPath, outputPath, range);
-                await this.sendResultAndCleanup(from, outputPath, 'application/pdf', 'document', 'Here is your split PDF.', session.metadata.originalName ? `${session.metadata.originalName}_split.pdf` : 'split.pdf', session.action);
+                await this.sendResultAndCleanup(from, outputPath, 'application/pdf', 'document', 'Here is your split PDF.', session.metadata.originalName ? `${session.metadata.originalName}_split.pdf` : 'split.pdf', session.action, session.files?.length || 1);
             }
             catch (err) {
                 await whatsappService.sendTextMessage(from, '❌ Invalid page range or processing failed. Please try again. 🔄');
@@ -222,7 +253,7 @@ class BotController {
                 const outputPath = path.join('/tmp', `${crypto.randomUUID()}_protected.pdf`);
                 await pdfWorker.protectPdf(inputPath, outputPath, text); // text is password
                 // Note: user password text is logged in WA but we don't save it
-                await this.sendResultAndCleanup(from, outputPath, 'application/pdf', 'document', 'Here is your protected PDF.', session.metadata.originalName ? `${session.metadata.originalName}_protected.pdf` : 'protected.pdf', session.action);
+                await this.sendResultAndCleanup(from, outputPath, 'application/pdf', 'document', 'Here is your protected PDF.', session.metadata.originalName ? `${session.metadata.originalName}_protected.pdf` : 'protected.pdf', session.action, session.files?.length || 1);
             }
             catch (err) {
                 await whatsappService.sendTextMessage(from, '❌ Failed to protect PDF. ⚠️');
@@ -235,7 +266,7 @@ class BotController {
                 const inputPath = session.files[0];
                 const outputPath = path.join('/tmp', `${crypto.randomUUID()}_unlocked.pdf`);
                 await pdfWorker.unlockPdf(inputPath, outputPath, text);
-                await this.sendResultAndCleanup(from, outputPath, 'application/pdf', 'document', 'Here is your unlocked PDF.', session.metadata.originalName ? `${session.metadata.originalName}_unlocked.pdf` : 'unlocked.pdf', session.action);
+                await this.sendResultAndCleanup(from, outputPath, 'application/pdf', 'document', 'Here is your unlocked PDF.', session.metadata.originalName ? `${session.metadata.originalName}_unlocked.pdf` : 'unlocked.pdf', session.action, session.files?.length || 1);
             }
             catch (err) {
                 await whatsappService.sendTextMessage(from, '❌ Failed to unlock PDF. The password might be incorrect. 🔑');
@@ -256,6 +287,11 @@ class BotController {
             await this.sendMainMenu(from);
             return;
         }
+        // Block document uploads while still awaiting compression level selection
+        if (session.action === 'menu_compress' && session.stage === 'awaiting_compression_level') {
+            await whatsappService.sendTextMessage(from, '⚠️ Please choose a compression level first before uploading your file. 🗜️');
+            return;
+        }
         // Only process acceptable MIME types
         const acceptableMimes = [
             'application/pdf',
@@ -270,11 +306,49 @@ class BotController {
             await whatsappService.sendTextMessage(from, '🚫 Unsupported file type. Please upload a PDF, Image, Word, or PowerPoint document. 📄🖼️');
             return;
         }
+        // Operation-specific file type validation (reject wrong types BEFORE downloading)
+        const pdfOnlyActions = ['menu_merge', 'menu_split', 'menu_compress', 'menu_protect', 'menu_unlock', 'convert_pdf_to_jpg', 'convert_pdf_to_docx'];
+        const isPdfOnlyAction = pdfOnlyActions.includes(session.action) || (session.action && session.action.startsWith('compress_'));
+        if (isPdfOnlyAction && document.mime_type !== 'application/pdf') {
+            await whatsappService.sendTextMessage(from, '🚫 This operation requires a PDF file. Please upload a valid PDF document. 📄');
+            return;
+        }
+        if (session.action === 'convert_images_to_pdf' && !['image/jpeg', 'image/png'].includes(document.mime_type)) {
+            await whatsappService.sendTextMessage(from, '🚫 This operation requires image files (JPG or PNG). Please upload a valid image. 🖼️');
+            return;
+        }
+        const docxMimes = ['application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/msword'];
+        if (session.action === 'convert_docx_to_pdf' && !docxMimes.includes(document.mime_type)) {
+            await whatsappService.sendTextMessage(from, '🚫 This operation requires a Word document (DOC/DOCX). Please upload a valid Word file. 📝');
+            return;
+        }
+        const pptxMimes = ['application/vnd.openxmlformats-officedocument.presentationml.presentation', 'application/vnd.ms-powerpoint'];
+        if (session.action === 'convert_pptx_to_pdf' && !pptxMimes.includes(document.mime_type)) {
+            await whatsappService.sendTextMessage(from, '🚫 This operation requires a PowerPoint file (PPT/PPTX). Please upload a valid PowerPoint document. 📊');
+            return;
+        }
         // Synchronously capture order of arrival to preserve correct document sequence
         session = sessionService.getSession(from);
         session.metadata.fileOrderCounter = (session.metadata.fileOrderCounter || 0) + 1;
         const expectedOrder = session.metadata.fileOrderCounter;
         sessionService.updateSession(from, session);
+        // Enforce max 20 PDFs for merge operation immediately
+        if (session.action === 'menu_merge' && expectedOrder > 20) {
+            await whatsappService.sendTextMessage(from, '🛑 You can merge a maximum of 20 PDFs at once. Please tap "Done Merging" to proceed with the files you\'ve uploaded, or type "clear" to start over. 📁');
+            return;
+        }
+        // Enforce max 20 images for a single images-to-PDF conversion immediately
+        if (session.action === 'convert_images_to_pdf' && expectedOrder > 20) {
+            await whatsappService.sendTextMessage(from, '🛑 You have reached the maximum of 20 images per PDF. Please finish or start a new conversion. 📁');
+            return;
+        }
+        // Single-file operations: reject additional files beyond the first immediately
+        const singleFileActions = ['menu_split', 'menu_compress', 'menu_protect', 'menu_unlock', 'convert_pdf_to_jpg', 'convert_docx_to_pdf', 'convert_pdf_to_docx', 'convert_pptx_to_pdf'];
+        const isSingleFileAction = singleFileActions.includes(session.action) || (session.action && session.action.startsWith('compress_'));
+        if (isSingleFileAction && expectedOrder > 1) {
+            await whatsappService.sendTextMessage(from, '⚠️ This operation only requires one file. Your file is already being processed. Type "clear" to start over if you want to use a different file. 🔄');
+            return;
+        }
         if (expectedOrder === 1) {
             await whatsappService.sendTextMessage(from, '📥 Receiving your file(s)... ⏳');
         }
@@ -303,27 +377,31 @@ class BotController {
                 const basename = path.basename(document.filename, path.extname(document.filename));
                 session.metadata.originalName = basename;
             }
-            // Check file size: 10 MiB for images, 40 MiB for other documents
+            // Check file size: 10/40MB for free, 100MB for pro
             const imageMimes = ['image/jpeg', 'image/png'];
             const isImage = imageMimes.includes(document.mime_type);
-            const FILE_SIZE_LIMIT = isImage ? 10 * 1024 * 1024 : 40 * 1024 * 1024;
+            const isPro = await database.isUserPro(from);
+            let FILE_SIZE_LIMIT = isImage ? 10 * 1024 * 1024 : 40 * 1024 * 1024;
+            if (isPro) {
+                FILE_SIZE_LIMIT = 100 * 1024 * 1024; // 100MB for all types
+            }
             const stats = await fs.stat(localPath);
             if (stats.size > FILE_SIZE_LIMIT) {
                 await fs.unlink(localPath).catch(() => { });
-                const limitMsg = isImage
+                let limitMsg = isImage
                     ? '⚠️ File is too large! The freemium plan limits images to 10 MB. 📉'
                     : '⚠️ File is too large! The freemium plan limits documents to 40 MB. 📉';
+                if (isPro) {
+                    limitMsg = '⚠️ File is too large! Even on Pro, the WhatsApp limit is 100MB per file. 📉';
+                }
+                else {
+                    limitMsg += '\n\nUpgrade to QuickPDF Pro for 100MB limits! 🚀 https://quickpdfassistant.in';
+                }
                 await whatsappService.sendTextMessage(from, limitMsg);
                 return;
             }
             // Fresh read -> mutate -> save immediately to avoid race conditions
             session.metadata.orderedFiles = session.metadata.orderedFiles || [];
-            // Enforce max 20 images for a single conversion
-            if (session.metadata.orderedFiles.length >= 20) {
-                await fs.unlink(localPath).catch(() => { });
-                await whatsappService.sendTextMessage(from, '🛑 You have reached the maximum of 20 images per PDF. Please finish or start a new conversion. 📁');
-                return;
-            }
             session.metadata.orderedFiles.push({ path: localPath, order: expectedOrder });
             session.metadata.orderedFiles.sort((a, b) => a.order - b.order);
             session.files = session.metadata.orderedFiles.map((f) => f.path);
@@ -372,7 +450,7 @@ class BotController {
         try {
             const outputPath = path.join('/tmp', `${crypto.randomUUID()}_merged.pdf`);
             await pdfWorker.mergePdfs(session.files, outputPath);
-            await this.sendResultAndCleanup(from, outputPath, 'application/pdf', 'document', 'Here is your merged PDF.', 'merged.pdf', session.action);
+            await this.sendResultAndCleanup(from, outputPath, 'application/pdf', 'document', 'Here is your merged PDF.', 'merged.pdf', session.action, session.files?.length || 1);
         }
         catch (error) {
             console.error('Merge error:', error);
@@ -397,7 +475,7 @@ class BotController {
             const statsNew = await fs.stat(outputPath);
             const origMb = (statsOrig.size / (1024 * 1024)).toFixed(1);
             const newMb = (statsNew.size / (1024 * 1024)).toFixed(1);
-            await this.sendResultAndCleanup(from, outputPath, 'application/pdf', 'document', `✅ Successfully compressed from ${origMb}MB to ${newMb}MB! 📉`, session.metadata.originalName ? `${session.metadata.originalName}_compressed.pdf` : 'compressed.pdf', session.action);
+            await this.sendResultAndCleanup(from, outputPath, 'application/pdf', 'document', `✅ Successfully compressed from ${origMb}MB to ${newMb}MB! 📉`, session.metadata.originalName ? `${session.metadata.originalName}_compressed.pdf` : 'compressed.pdf', session.action, session.files?.length || 1);
         }
         catch (error) {
             console.error('Compression error:', error);
@@ -446,6 +524,7 @@ class BotController {
                             pageCount: images.length,
                             status: 'success'
                         });
+                        await database.logDocumentStats(from, session.action, session.files?.length || 1, images.length);
                         // Cleanup the whole directory manually
                         try {
                             for (const img of images) {
@@ -476,17 +555,17 @@ class BotController {
             else if (type === 'convert_docx_to_pdf' || type === 'convert_pptx_to_pdf') {
                 const outputDir = path.join('/tmp');
                 const outputPath = await pdfWorker.convertDocxToPdf(inputPath, outputDir);
-                await this.sendResultAndCleanup(from, outputPath, 'application/pdf', 'document', 'Here is your converted PDF.', session.metadata.originalName ? `${session.metadata.originalName}.pdf` : 'converted.pdf', session.action);
+                await this.sendResultAndCleanup(from, outputPath, 'application/pdf', 'document', 'Here is your converted PDF.', session.metadata.originalName ? `${session.metadata.originalName}.pdf` : 'converted.pdf', session.action, session.files?.length || 1);
             }
             else if (type === 'convert_pdf_to_docx') {
                 const outputDir = path.join('/tmp');
                 const outputPath = await pdfWorker.convertPdfToDocx(inputPath, outputDir);
-                await this.sendResultAndCleanup(from, outputPath, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'document', 'Here is your converted Word document.', session.metadata.originalName ? `${session.metadata.originalName}.docx` : 'converted.docx', session.action);
+                await this.sendResultAndCleanup(from, outputPath, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'document', 'Here is your converted Word document.', session.metadata.originalName ? `${session.metadata.originalName}.docx` : 'converted.docx', session.action, session.files?.length || 1);
             }
             else if (type === 'convert_images_to_pdf') {
                 const outputPath = path.join('/tmp', `${crypto.randomUUID()}_images_converted.pdf`);
                 await pdfWorker.convertImagesToPdf(session.files, outputPath);
-                await this.sendResultAndCleanup(from, outputPath, 'application/pdf', 'document', 'Here is your merged image PDF.', 'images.pdf', session.action);
+                await this.sendResultAndCleanup(from, outputPath, 'application/pdf', 'document', 'Here is your merged image PDF.', 'images.pdf', session.action, session.files?.length || 1);
             }
         }
         catch (error) {
@@ -495,7 +574,7 @@ class BotController {
         }
         sessionService.clearSession(from);
     }
-    async sendResultAndCleanup(to, filePath, mimeType, type = 'document', caption = '', outputFilename = null, action = 'unknown') {
+    async sendResultAndCleanup(to, filePath, mimeType, type = 'document', caption = '', outputFilename = null, action = 'unknown', inputDocumentCount = 1, outputDocumentCount = 1) {
         try {
             const stats = await fs.stat(filePath);
             const fileSizeMb = (stats.size / (1024 * 1024)).toFixed(2);
@@ -505,7 +584,8 @@ class BotController {
                 mimeType: mimeType,
                 status: 'success'
             });
-            const usage = sessionService.incrementDailyUsage(to);
+            await database.logDocumentStats(to, action, inputDocumentCount, outputDocumentCount);
+            const usage = await database.getDailyUsage(to);
             console.log(`User ${to} has used ${usage} operations today.`);
             console.log(`Uploading processed file to WhatsApp: ${filePath}`);
             const mediaId = await whatsappService.uploadMedia(filePath, type);

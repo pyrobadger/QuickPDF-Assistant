@@ -1,5 +1,7 @@
 import express from 'express';
 import botController from '../controllers/botController.js';
+import { verifyWebhookSignature } from '../services/payment.js';
+import * as database from '../services/database.js';
 const router = express.Router();
 // Webhook Verification (GET)
 // Required by Meta to verify the callback URL
@@ -7,11 +9,6 @@ router.get('/', (req, res) => {
     const mode = req.query['hub.mode'];
     const token = req.query['hub.verify_token'];
     const challenge = req.query['hub.challenge'];
-    //temp
-    console.log('MODE:', mode);
-    console.log('TOKEN RECEIVED:', token);
-    console.log('ENV TOKEN:', process.env.VERIFY_TOKEN);
-    console.log('MATCH:', token === process.env.VERIFY_TOKEN);
     if (mode && token) {
         if (mode === 'subscribe' && token === process.env.VERIFY_TOKEN) {
             console.log('WEBHOOK_VERIFIED');
@@ -50,6 +47,42 @@ router.post('/', async (req, res) => {
     }
     else {
         res.sendStatus(404);
+    }
+});
+// Razorpay Webhooks (POST)
+// Note: In index.ts, we bypass express.json() for this route so we can read the raw body for signature verification
+router.post('/razorpay', express.raw({ type: 'application/json' }), async (req, res) => {
+    try {
+        const signature = req.headers['x-razorpay-signature'];
+        const rawBody = req.body.toString('utf8');
+        if (!verifyWebhookSignature(rawBody, signature)) {
+            res.status(400).json({ error: 'Invalid signature' });
+            return;
+        }
+        const event = JSON.parse(rawBody);
+        if (event.event === 'order.paid') {
+            const orderId = event.payload.payment.entity.order_id;
+            const phone = event.payload.payment.entity.notes.phone;
+            const isYearly = event.payload.payment.entity.notes.isYearly === "true";
+            const status = "active";
+            const planId = isYearly ? "yearly_pass" : "monthly_pass";
+            const endDate = new Date();
+            if (isYearly) {
+                endDate.setFullYear(endDate.getFullYear() + 1);
+            }
+            else {
+                endDate.setMonth(endDate.getMonth() + 1);
+            }
+            if (phone) {
+                await database.updateSubscription(phone, orderId, status, planId, endDate.toISOString());
+                console.log(`Updated one-time pass for ${phone} to ${status} until ${endDate.toISOString()}`);
+            }
+        }
+        res.json({ status: 'ok' });
+    }
+    catch (error) {
+        console.error('Webhook processing error:', error);
+        res.status(500).json({ error: 'Webhook processing failed' });
     }
 });
 export default router;

@@ -714,19 +714,40 @@
                         <p>Link your WhatsApp number to activate Pro features instantly.</p>
                     </div>
 
-                    <div class="upgrade-form-group">
-                        <label for="whatsapp-input">WhatsApp Number</label>
-                        <input type="tel" id="whatsapp-input" class="upgrade-input" placeholder="e.g. +919876543210"
-                            autocomplete="tel">
+                    <!-- Step 1: Phone Input -->
+                    <div id="step-phone">
+                        <div class="upgrade-form-group">
+                            <label for="whatsapp-input">WhatsApp Number</label>
+                            <input type="tel" id="whatsapp-input" class="upgrade-input" placeholder="e.g. +919876543210"
+                                autocomplete="tel">
+                        </div>
+
+                        <p style="font-size: 11px; color: var(--color-text-muted); margin-bottom: 20px; line-height: 1.4;">
+                            <strong>Note:</strong> We will send a secure 6-digit verification code to your WhatsApp account.
+                        </p>
+
+                        <button class="btn-upgrade-submit" id="btn-send-otp" onclick="sendVerificationCode()">
+                            Send Verification Code
+                        </button>
                     </div>
 
-                    <p style="font-size: 11px; color: var(--color-text-muted); margin-bottom: 20px; line-height: 1.4;">
-                        <strong>Note:</strong> This is a secure one-time payment. No automatic deductions will be made.
-                    </p>
+                    <!-- Step 2: OTP Verification (Hidden initially) -->
+                    <div id="step-otp" style="display: none;">
+                        <div class="upgrade-form-group">
+                            <label for="otp-input">Enter 6-Digit Code</label>
+                            <input type="text" id="otp-input" class="upgrade-input" placeholder="• • • • • •" maxlength="6"
+                                style="text-align: center; letter-spacing: 6px; font-size: 18px; font-weight: 700;">
+                        </div>
 
-                    <button class="btn-upgrade-submit" id="btn-continue-checkout" onclick="continueToCheckout()">
-                        Continue to Payment
-                    </button>
+                        <p style="font-size: 12px; color: var(--color-text-secondary); margin-bottom: 16px; line-height: 1.4;">
+                            We sent a code to <strong id="display-phone-number"></strong> on WhatsApp.<br>
+                            <a href="javascript:void(0)" onclick="resetToPhoneStep()" style="color: var(--color-coral); text-decoration: underline; margin-top: 4px; display: inline-block;">Change number / Resend</a>
+                        </p>
+
+                        <button class="btn-upgrade-submit" id="btn-verify-checkout" onclick="verifyAndCheckout()">
+                            Verify & Continue to Payment
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -734,33 +755,123 @@
 
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <script>
+        let currentPhoneForOtp = '';
+
         function openRazorpayCheckout() {
-            // Show the custom modal instead of prompt
+            resetToPhoneStep();
             document.getElementById('upgrade-modal').classList.add('active');
             document.getElementById('whatsapp-input').focus();
         }
 
         function closeUpgradeModal() {
             document.getElementById('upgrade-modal').classList.remove('active');
-            document.getElementById('whatsapp-input').value = '';
+            resetToPhoneStep();
         }
 
-        async function continueToCheckout() {
+        function resetToPhoneStep() {
+            document.getElementById('step-phone').style.display = 'block';
+            document.getElementById('step-otp').style.display = 'none';
+            document.getElementById('otp-input').value = '';
+            const btnSend = document.getElementById('btn-send-otp');
+            if (btnSend) {
+                btnSend.disabled = false;
+                btnSend.innerHTML = 'Send Verification Code';
+            }
+            const btnVerify = document.getElementById('btn-verify-checkout');
+            if (btnVerify) {
+                btnVerify.disabled = false;
+                btnVerify.innerHTML = 'Verify & Continue to Payment';
+            }
+        }
+
+        async function sendVerificationCode() {
             const phoneInput = document.getElementById('whatsapp-input');
-            const submitBtn = document.getElementById('btn-continue-checkout');
+            const submitBtn = document.getElementById('btn-send-otp');
             const phone = phoneInput.value.trim();
 
             if (!phone) {
-                alert("Please enter your WhatsApp number to link your Pro account.");
+                alert("Please enter your WhatsApp number.");
                 phoneInput.focus();
                 return;
             }
 
             try {
-                // Disable button and show loading state
                 submitBtn.disabled = true;
-                submitBtn.innerHTML = 'Processing... <i class="ph ph-spinner ph-spin"></i>';
+                submitBtn.innerHTML = 'Sending Code... <i class="ph ph-spinner ph-spin"></i>';
 
+                const response = await fetch('/api/send-otp', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phone: phone })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    alert(data.message || data.error || 'Failed to send verification code.');
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = 'Send Verification Code';
+                    return;
+                }
+
+                currentPhoneForOtp = phone;
+                document.getElementById('display-phone-number').innerText = phone;
+                document.getElementById('step-phone').style.display = 'none';
+                document.getElementById('step-otp').style.display = 'block';
+                document.getElementById('otp-input').focus();
+
+            } catch (error) {
+                console.error(error);
+                alert("Network error while sending OTP. Please try again.");
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = 'Send Verification Code';
+            }
+        }
+
+        async function verifyAndCheckout() {
+            const otpInput = document.getElementById('otp-input');
+            const submitBtn = document.getElementById('btn-verify-checkout');
+            const otp = otpInput.value.trim();
+
+            if (!otp || otp.length !== 6) {
+                alert("Please enter the 6-digit verification code sent to your WhatsApp.");
+                otpInput.focus();
+                return;
+            }
+
+            try {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = 'Verifying... <i class="ph ph-spinner ph-spin"></i>';
+
+                const verifyRes = await fetch('/api/verify-otp', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phone: currentPhoneForOtp, otp: otp })
+                });
+
+                const verifyData = await verifyRes.json();
+
+                if (!verifyRes.ok) {
+                    alert(verifyData.message || verifyData.error || 'Verification failed.');
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = 'Verify & Continue to Payment';
+                    return;
+                }
+
+                // Phone verified! Now proceed to create Razorpay order
+                submitBtn.innerHTML = 'Opening Checkout... <i class="ph ph-spinner ph-spin"></i>';
+                await continueToCheckout(currentPhoneForOtp, submitBtn);
+
+            } catch (error) {
+                console.error(error);
+                alert("Network error during verification. Please try again.");
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = 'Verify & Continue to Payment';
+            }
+        }
+
+        async function continueToCheckout(phone, submitBtn) {
+            try {
                 // 1. Create Order
                 const subResponse = await fetch('/api/create-order', {
                     method: 'POST',
@@ -774,10 +885,10 @@
                     if (subData.error === 'ALREADY_SUBSCRIBED') {
                         alert(subData.message);
                     } else {
-                        alert('Error creating subscription: ' + (subData.error || 'Unknown error'));
+                        alert('Error creating order: ' + (subData.message || subData.error || 'Unknown error'));
                     }
                     submitBtn.disabled = false;
-                    submitBtn.innerHTML = 'Continue to Payment';
+                    submitBtn.innerHTML = 'Verify & Continue to Payment';
                     return;
                 }
 
@@ -809,13 +920,13 @@
                         } else {
                             alert('Payment verification failed: ' + verifyData.error);
                             submitBtn.disabled = false;
-                            submitBtn.innerHTML = 'Continue to Payment';
+                            submitBtn.innerHTML = 'Verify & Continue to Payment';
                         }
                     },
                     modal: {
                         ondismiss: function () {
                             submitBtn.disabled = false;
-                            submitBtn.innerHTML = 'Continue to Payment';
+                            submitBtn.innerHTML = 'Verify & Continue to Payment';
                         }
                     },
                     theme: {
@@ -827,7 +938,7 @@
                 rzp.on('payment.failed', function (response) {
                     alert('Payment failed: ' + response.error.description);
                     submitBtn.disabled = false;
-                    submitBtn.innerHTML = 'Continue to Payment';
+                    submitBtn.innerHTML = 'Verify & Continue to Payment';
                 });
                 rzp.open();
 
@@ -835,7 +946,7 @@
                 console.error(error);
                 alert('Something went wrong during checkout initialization.');
                 submitBtn.disabled = false;
-                submitBtn.innerHTML = 'Continue to Payment';
+                submitBtn.innerHTML = 'Verify & Continue to Payment';
             }
         }
     </script>

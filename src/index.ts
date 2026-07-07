@@ -33,6 +33,61 @@ app.use('/webhook', webhookRoutes);
 // --- Razorpay Endpoints ---
 
 import * as database from './services/database.js';
+import otpService from './services/otp.js';
+
+function normalizePhone(phone: string): string {
+    let clean = phone.replace(/\D/g, ''); // Strip all non-numeric characters like +, -, spaces
+    if (clean.length === 10) {
+        clean = '91' + clean; // Assume India country code if exactly 10 digits
+    } else if (clean.length === 11 && clean.startsWith('0')) {
+        clean = '91' + clean.substring(1); // Handle leading zero
+    }
+    return clean;
+}
+
+app.post('/api/send-otp', async (req: Request, res: Response): Promise<void> => {
+    try {
+        let { phone } = req.body;
+        if (!phone) {
+            res.status(400).json({ error: 'WhatsApp number is required' });
+            return;
+        }
+        phone = normalizePhone(phone);
+
+        const isPro = await database.isUserPro(phone);
+        if (isPro) {
+            res.status(400).json({ error: 'ALREADY_SUBSCRIBED', message: 'You are already subscribed to QuickPDF Pro!' });
+            return;
+        }
+
+        await otpService.sendOtp(phone);
+        res.json({ success: true, message: 'OTP sent to WhatsApp' });
+    } catch (error: any) {
+        console.error('Send OTP error:', error);
+        res.status(500).json({ error: 'Failed to send verification code: ' + (error.message || JSON.stringify(error)) });
+    }
+});
+
+app.post('/api/verify-otp', async (req: Request, res: Response): Promise<void> => {
+    try {
+        let { phone, otp } = req.body;
+        if (!phone || !otp) {
+            res.status(400).json({ error: 'Phone number and OTP are required' });
+            return;
+        }
+        phone = normalizePhone(phone);
+
+        const isValid = otpService.verifyOtp(phone, otp);
+        if (isValid) {
+            res.json({ success: true, message: 'Phone verified successfully' });
+        } else {
+            res.status(400).json({ error: 'INVALID_OTP', message: 'Invalid or expired verification code.' });
+        }
+    } catch (error: any) {
+        console.error('Verify OTP error:', error);
+        res.status(500).json({ error: 'Failed to verify OTP' });
+    }
+});
 
 app.post('/api/create-order', async (req: Request, res: Response): Promise<void> => {
     try {
@@ -42,12 +97,11 @@ app.post('/api/create-order', async (req: Request, res: Response): Promise<void>
             return;
         }
 
-        // Normalize phone number to match WhatsApp Cloud API format (e.g., 919876543210)
-        phone = phone.replace(/\D/g, ''); // Strip all non-numeric characters like +, -, spaces
-        if (phone.length === 10) {
-            phone = '91' + phone; // Assume India country code if exactly 10 digits
-        } else if (phone.length === 11 && phone.startsWith('0')) {
-            phone = '91' + phone.substring(1); // Handle leading zero
+        phone = normalizePhone(phone);
+
+        if (!otpService.isVerified(phone)) {
+            res.status(403).json({ error: 'PHONE_NOT_VERIFIED', message: 'Please verify your phone number with OTP first.' });
+            return;
         }
 
         const isPro = await database.isUserPro(phone);
@@ -70,12 +124,14 @@ app.post('/api/create-order', async (req: Request, res: Response): Promise<void>
 
 app.post('/api/verify-payment', async (req: Request, res: Response): Promise<void> => {
     try {
-        const { phone, isYearly, razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+        let { phone, isYearly, razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
 
         if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature || !phone) {
             res.status(400).json({ error: 'Missing required payment fields' });
             return;
         }
+
+        phone = normalizePhone(phone);
 
         const isValid = verifySignature(razorpay_order_id, razorpay_payment_id, razorpay_signature);
 
