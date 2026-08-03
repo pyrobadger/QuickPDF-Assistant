@@ -194,41 +194,13 @@ document.addEventListener('DOMContentLoaded', () => {
             if (matchingBtn) matchingBtn.classList.add('active');
             if (matchingPanel) matchingPanel.classList.add('active');
 
-            // Smooth scroll to features section
+            // Scroll to features section
             const featuresSection = document.getElementById('features');
-            if (featuresSection) featuresSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            if (featuresSection) featuresSection.scrollIntoView({ block: 'start' });
         });
     });
 
     // (Waitlist logic removed)
 
-    // === Smooth Scroll (Lenis) ===
-    if (typeof Lenis !== 'undefined') {
-        const lenis = new Lenis({
-            duration: 1.2,
-            easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-            direction: 'vertical',
-            gestureDirection: 'vertical',
-            smooth: true,
-            mouseMultiplier: 1,
-            smoothTouch: false,
-            touchMultiplier: 2,
-            infinite: false,
-        });
 
-        function raf(time) {
-            lenis.raf(time);
-            requestAnimationFrame(raf);
-        }
-
-        requestAnimationFrame(raf);
-
-        // Update anchor tags to work with Lenis smoothly
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                e.preventDefault();
-                lenis.scrollTo(anchor.getAttribute('href'));
-            });
-        });
-    }
 });
