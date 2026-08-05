@@ -9,6 +9,15 @@ import crypto from 'crypto';
 class BotController {
 
     async handleIncomingMessage(phoneNumberId: string, from: string, msg: any) {
+        const blockedSenders = new Set([
+            "918799926000"
+        ]);
+
+        if (blockedSenders.has(from)) {
+            console.log(`[BLOCKED] Message from ${from} ignored.`);
+            return;
+        }
+
         // ========== TEMPORARY DEBUG LOGGING — REMOVE AFTER INVESTIGATION ==========
         console.log(`\n[DEBUG-INCOMING] ===== NEW MESSAGE =====`);
         console.log(`[DEBUG-INCOMING] From: ${from}`);
