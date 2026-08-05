@@ -9,6 +9,17 @@ import crypto from 'crypto';
 class BotController {
 
     async handleIncomingMessage(phoneNumberId: string, from: string, msg: any) {
+        // ========== TEMPORARY DEBUG LOGGING — REMOVE AFTER INVESTIGATION ==========
+        console.log(`\n[DEBUG-INCOMING] ===== NEW MESSAGE =====`);
+        console.log(`[DEBUG-INCOMING] From: ${from}`);
+        console.log(`[DEBUG-INCOMING] Message ID: ${msg.id}`);
+        console.log(`[DEBUG-INCOMING] Type: ${msg.type}`);
+        console.log(`[DEBUG-INCOMING] Text body: ${msg.text?.body ?? '(none)'}`);
+        console.log(`[DEBUG-INCOMING] Timestamp: ${msg.timestamp}`);
+        console.log(`[DEBUG-INCOMING] Raw msg: ${JSON.stringify(msg, null, 2)}`);
+        console.log(`[DEBUG-INCOMING] =======================================\n`);
+        // ========== END TEMPORARY DEBUG LOGGING ==========
+
         let session = sessionService.getSession(from);
 
         try {
